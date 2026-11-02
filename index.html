@@ -286,7 +286,7 @@ const EXP_CATS = CATS.filter(x => x.k === 'expense').map(x => x.c);
 const FIXED_CATS = ['구독','주거·공과금','교통','건강','취미','학비'];
 const RULES = [
   [/transfer (to|from) xx\d{3,4}|해외송금|wirebarley|wise\b|transfer to kb|transfer to (my|own)|내계좌|본인|to savings|netbank saver|goal saver|모으기/i,'내 계좌 이체'],
-  [/cash deposit/i,'현금 수입'],
+  [/cash deposit|atm\s*입금|무통장입금/i,'현금 수입'],
   [/tfn withholding|international transaction fee|\bfee\b|수수료|tax\b/i,'세금·수수료'],
   [/tattoo|iworld|kaya\s*emporium|kayaemporium|facebk|facebook|metaplatfor|meta ads|instagram ads/i,'사업비'],
   [/real estate|rent\b|월세/i,'주거·공과금'],
@@ -299,7 +299,7 @@ const RULES = [
   [/opal|transport|translink|myki|didi|grab|uber(?!\s*eats)|shell|bp |ampol|parking|티머니|택시|주유|교통/i,'교통'],
   [/pharmacy|medical|dental|bupa|medibank|ahm|nib|약국|병원|의원|치과/i,'건강'],
   [/cafe|coffee|mcdonald|kfc|hungry|uber\s*eats|doordash|menulog|restaurant|sushi|pizza|ramen|bakery|bake|brew|hotpot|thai|matcha|heytea|chatime|gong cha|boost juice|subway|grill|bistro|kitchen|eatery|osteria|trattoria|izakaya|dumpling|noodle|bbq|surasang|스타벅스|카페|배달의민족|배민|요기요|쿠팡이츠|식당|치킨|베이커리/i,'음식'],
-  [/qantas|jetstar|virgin|airbnb|booking|edreams|agoda|hotel|expedia|항공|호텔|숙박/i,'여행'],
+  [/qantas|jetstar|virgin|airbnb|booking|edreams|트립닷컴|trip\.com|아고다|야놀자|여기어때|대한항공|아시아나|진에어|제주항공|티웨이|에어부산|agoda|hotel|expedia|항공|호텔|숙박/i,'여행'],
   [/cinema|hoyts|event cinema|gym|fitness|derrimut|sanctuary|zoo|massage|steam|playstation|nintendo|ticketek|concert|영화|헬스|공연|cgv/i,'취미'],
   [/netflix|spotify|youtube|apple\.com|icloud|disney|chatgpt|openai|anthropic|claude|notion|google storage|구독|멜론|왓챠|티빙/i,'구독'],
   [/kmart|target|big w|jb hi-fi|amazon|ebay|temu|shein|uniqlo|zara|쿠팡|무신사|올리브영|29cm|shopping|mecca|sephora|h&m/i,'쇼핑'],
@@ -373,6 +373,9 @@ const acctById = id => S.settings.accounts.find(a => a.id === id);
 const descKey = d => String(d||'').replace(/value date.*|card xx\d+.*/i, '').toLowerCase().replace(/[0-9#*\-_/.:,()]+/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,3).join(' ');
 function categorize(desc, amt, acctId){
   const key = descKey(desc), ov = S.settings.catOverrides || {};
+  // the holder's own name, alone or after a bank name ("토스 홍길동"), means money between own accounts
+  const who = String(desc || '').split(' · ')[0].trim().split(/\s+/);
+  if ((S.settings.ownerNames || []).some(n => who.includes(n))) return '내 계좌 이체';
   if (key && ov[key] && CAT[ov[key]]) return ov[key];
   for (const [re, c] of RULES) if (re.test(desc)) return amt > 0 && c === '사업비' ? '사업 수입' : c;
   const a = acctId ? acctById(acctId) : null;
@@ -1202,9 +1205,11 @@ function readFile(file){
         const a = {id: uid(), bank: $('#impNewCur').value === 'KRW' ? 'other' : 'cba', name, cur: $('#impNewCur').value, type: $('#impNewType').value, snaps: []};
         S.settings.accounts.push(a); persist('settings'); acct = a.id;
       }
+      const holder = rows.slice(0, 15).find(r => /^(성명|예금주|고객명)$/.test(String(r[0]).trim()));
+      if (holder && String(holder[1] || '').trim()){ const n = String(holder[1]).trim(); S.settings.ownerNames = [...new Set([...(S.settings.ownerNames || []), n])]; if (!demo) persist('settings'); }
       pendingImport = {name: file.name, acct, rows, map: detect(rows)};
       showPreview();
-    } catch { $('#impPreview').innerHTML = `<p class="neg small" style="margin-top:12px">이 파일을 읽지 못했어요. CSV나 엑셀 파일인지, 비밀번호가 걸려 있지 않은지 확인해 주세요.</p>`; }
+    } catch { $('#impPreview').innerHTML = `<p class="neg small" style="margin-top:12px">이 파일을 읽지 못했어요. 비밀번호가 걸린 엑셀(토스뱅크 등)은 엑셀·Numbers에서 한 번 열고 비밀번호 없이 다시 저장한 뒤 넣어 주세요.</p>`; }
   };
   r.readAsArrayBuffer(file);
 }
@@ -1218,7 +1223,8 @@ function detect(rows){
       let desc = party >= 0 ? party : find(HD.desc), memo = find(HD.memo);
       if (memo < 0 && party >= 0) memo = find(/적요|내용/);
       if (desc < 0) desc = memo;
-      return {header: i, date, desc, memo: memo !== desc ? memo : -1, out, inn, amt: (out >= 0 || inn >= 0) ? -1 : amt, bal};
+      const kind = find(/^적요$|^거래\s*유형$|^구분$/);
+      return {header: i, date, desc, memo: memo !== desc ? memo : -1, kind: kind !== desc ? kind : -1, out, inn, amt: (out >= 0 || inn >= 0) ? -1 : amt, bal};
     }
   }
   const r0 = rows[0] || [];
@@ -1245,6 +1251,7 @@ function parseRows(p){
     else { const o = map.out >= 0 ? parseNum(r[map.out]) : NaN, n = map.inn >= 0 ? parseNum(r[map.inn]) : NaN; amt = isNaN(o) && isNaN(n) ? NaN : (isNaN(n) ? 0 : n) - (isNaN(o) ? 0 : Math.abs(o)); }
     if (isNaN(amt) || amt === 0) continue;
     let desc = map.desc >= 0 ? String(r[map.desc]).trim() : '';
+    if (!desc && map.kind >= 0) desc = String(r[map.kind]).trim();
     if (map.memo >= 0 && r[map.memo] && String(r[map.memo]).trim() !== desc) desc = (desc ? desc + ' · ' : '') + String(r[map.memo]).trim();
     const bal = map.bal >= 0 ? parseNum(r[map.bal]) : NaN;
     out.push({date, amt, desc: desc || '(내용 없음)', bal: isNaN(bal) ? undefined : bal});
