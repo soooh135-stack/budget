@@ -16,207 +16,205 @@
 <link rel="manifest" href="manifest.webmanifest">
 <style>:root{padding-top:env(safe-area-inset-top,0px)} body{margin:0} [hidden]{display:none!important} img{max-width:100%}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@500;600;700&family=Inter+Tight:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/innks/NanumSquareRound@master/nanumsquareround.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+/* One deliberate look (grey + candy blocks, after the Inkwell reference): single theme on purpose */
 :root{
-  --bg:#F4EEEB; --surface:#FFFFFF; --surface2:#F6EAEC; --ink:#2A0A12; --ink2:#6B4A52; --muted:#9A8088; --line:#EBDCDF;
-  --brand:#660924; --brand2:#941737; --peach:#CC3E5E; --brand-ink:#FFFFFF; --blush:#F7DDE3;
-  --peri:#E1E3FA; --sage:#DDE9D7; --butter:#F5F0B8;
-  --accent:#660924; --accent-ink:#FFFFFF;
-  --bank:#A3283F; --cash:#6E79D6; --exp:#A3283F; --good:#2F7D57; --warn:#A86A12; --bad:#C0392B;
-  --radius:28px;
-  --font:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
-  --serif:"Noto Serif KR","Apple SD Gothic Neo",Georgia,serif;
-  --mono:"Inter Tight","Noto Sans KR",-apple-system,system-ui,sans-serif;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme:dark;
-    --bg:#170A0E; --surface:#24121A; --surface2:#2F1822; --ink:#F6E9EC; --ink2:#D2B4BC; --muted:#A08890; --line:#3D2430;
-    --brand:#5A0820; --brand2:#D45670; --peach:#E07A92; --brand-ink:#FFF3F5; --blush:#3A1C27;
-    --peri:#262A4A; --sage:#1F2E22; --butter:#34311A;
-    --accent:#D45670; --accent-ink:#170A0E;
-    --bank:#D45670; --cash:#7B84E0; --exp:#D45670; --good:#5CC28E; --warn:#E0A84A; --bad:#F07A6A;
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme:dark;
-  --bg:#170A0E; --surface:#24121A; --surface2:#2F1822; --ink:#F6E9EC; --ink2:#D2B4BC; --muted:#A08890; --line:#3D2430;
-  --brand:#5A0820; --brand2:#D45670; --peach:#E07A92; --brand-ink:#FFF3F5; --blush:#3A1C27;
-  --peri:#262A4A; --sage:#1F2E22; --butter:#34311A;
-  --accent:#D45670; --accent-ink:#170A0E;
-  --bank:#D45670; --cash:#7B84E0; --exp:#D45670; --good:#5CC28E; --warn:#E0A84A; --bad:#F07A6A;
+  color-scheme:light;
+  --bg:#ADADAB; --surface:#FFFFFF; --surface2:#F1EFEA; --ink:#161616; --ink2:#3A3A3A; --muted:#77736C; --line:#E4E1DA;
+  --yellow:#F6F47C; --beige:#D8D2C2; --sage:#BFDDB4; --lilac:#D9CCE8; --pink:#F4C6D9;
+  --accent:#161616; --accent-ink:#FFFFFF;
+  --bank:#5B5BD6; --cash:#D9A400; --exp:#161616; --good:#2E7D4F; --warn:#9A6A00; --bad:#C0392B;
+  --radius:30px;
+  --font:"Nunito","NanumSquareRound",-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;
+  --mono:"Nunito","NanumSquareRound",-apple-system,system-ui,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
 body{font-family:var(--font);color:var(--ink);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1020px;margin:0 auto;padding-inline:16px;padding-block:20px 120px}
-h1,h2,h3{text-wrap:balance;margin:0;line-height:1.25}
-h1{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:-.01em}
-h2{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:-.01em}
-h3{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
-.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.wrap{max-width:560px;margin:0 auto;padding-inline:12px;padding-block:14px 120px;position:relative;overflow:hidden}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+h2{font-size:30px;font-weight:600;letter-spacing:-.03em}
+h3{font-size:12px;font-weight:800;color:var(--ink);letter-spacing:.06em}
+.num{font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)} .ink2{color:var(--ink2)}
 .small{font-size:13px} .tiny{font-size:12px}
 button,select,input{font:inherit;color:inherit}
 button{cursor:pointer}
-button:disabled{opacity:.5;cursor:default}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:2.5px solid var(--ink);outline-offset:2px}
 p{margin:0}
+svg.sh{position:absolute;pointer-events:none;z-index:0}
+.card>*:not(svg.sh),.panel>*:not(svg.sh){position:relative;z-index:1}
 
-header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand .mark{width:30px;height:30px;border-radius:50%;background:var(--brand);display:grid;place-items:center}
-.brand .mark i{width:10px;height:10px;border-radius:50%;background:var(--peach);display:block}
-.brand .flags{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
-.sync{font-size:12px;color:var(--muted)}
+/* header */
+header.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 2px 0;position:relative;z-index:2}
+.logo{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:999px;padding:9px 16px;font-size:14px;font-weight:800;border:0}
+.logo i{width:16px;height:16px;border-radius:50%;background:var(--yellow);border:2px solid var(--ink);display:block}
+.hbtns{display:flex;gap:6px;align-items:center}
+.rbtn{height:42px;min-width:42px;padding:0 14px;border-radius:999px;background:#fff;border:0;font-size:13px;font-weight:800;display:inline-grid;place-items:center}
+.sync{display:block;font-size:11px;color:#3d3d3b;text-align:right;margin:6px 6px 0;position:relative;z-index:2}
 
-/* floating bottom tab bar */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));pointer-events:none}
-nav.tabs .in{pointer-events:auto;max-width:440px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--brand);border-radius:999px;padding:6px;box-shadow:0 10px 30px rgba(60,5,20,.28)}
-nav.tabs button{border:0;background:transparent;padding:7px 4px;border-radius:999px;color:rgba(255,236,240,.72);font-size:11.5px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:1px}
-nav.tabs button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-nav.tabs button[aria-selected="true"]{color:#660924;background:#F7DDE3;font-weight:700}
+/* hero (shape stage) */
+.hero{position:relative;height:230px;margin:0 -12px}
+.hero .count{position:absolute;left:24px;bottom:18px;background:#fff;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:800}
+.hero .stick{position:absolute;right:20px;bottom:20px;background:var(--yellow);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:800;transform:rotate(-6deg);border:2px solid var(--ink)}
+.hero .stick.neg{background:var(--pink)}
+.stage{position:relative;height:96px;margin:0 -12px}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:0 4px 2px;position:relative;z-index:2}
+.pagehead h2{font-size:36px;font-weight:700;letter-spacing:-.04em;color:var(--ink)}
 
-.banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--butter);border-radius:20px;padding:12px 16px;margin-bottom:18px;font-size:14px}
-.card{background:var(--surface);border-radius:var(--radius);padding:20px}
-.stack{display:flex;flex-direction:column;gap:14px}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start}
+.banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--yellow);border-radius:22px;padding:12px 16px;margin:10px 0 0;font-size:13px;position:relative;z-index:2;border:2px solid var(--ink)}
+
+/* blocks */
+.stack{display:flex;flex-direction:column;gap:8px}
+.card,.panel{background:var(--surface);border-radius:var(--radius);padding:22px 20px;position:relative;overflow:hidden}
+.c-y{background:var(--yellow)}.c-b,.panel{background:var(--beige)}.c-g{background:var(--sage)}.c-l{background:var(--lilac)}.c-p{background:var(--pink)}
+.grid2{display:grid;grid-template-columns:1fr;gap:8px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .between{justify-content:space-between}
-.head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:2px}
-.pagehead h2{font-size:26px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.T,.head h2{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.02}
+.va{font-size:12px;font-weight:800;letter-spacing:.04em;white-space:nowrap;background:transparent;border:0;padding:0}
 
-.seg{display:inline-flex;background:var(--surface);border-radius:999px;padding:4px;flex-wrap:wrap;gap:2px}
-.seg button{border:0;background:transparent;padding:5px 14px;border-radius:999px;font-size:13px;color:var(--ink2)}
-.seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);font-weight:600}
+.who{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600}
+.badge{background:var(--yellow);border-radius:999px;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:.04em;border:1.5px solid var(--ink)}
+.badge.neg{background:var(--pink)}
+.big{font-size:64px;font-weight:600;letter-spacing:-.045em;line-height:.95;margin-top:14px}
+.big small{font-size:26px;font-weight:700;margin-right:3px;letter-spacing:-.02em}
+.sub{font-size:13.5px;margin-top:10px;line-height:1.55;color:var(--ink2)}
+.sub b{font-weight:800}
 
-/* home */
-.kpis{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
-@media (max-width:760px){.kpis{grid-template-columns:1fr}}
-.kpi .label{font-size:13px;font-weight:500;opacity:.8}
-.kpi .big{font-family:var(--mono);font-size:clamp(40px,9vw,58px);font-weight:300;letter-spacing:-.035em;line-height:1.05;margin-top:6px}
-.kpi .alt{font-size:14px;margin-top:6px;opacity:.75}
-.kpi.cherry{background:var(--brand);color:var(--brand-ink)}
-.kpi.cherry .muted,.kpi.cherry .tiny{color:rgba(255,236,240,.7)}
-.kpi.blush{background:var(--blush)}
-.delta{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.14)}
-.kpi.cherry .delta.pos{background:#E9F5EC;color:#1E6B45}
-.kpi.cherry .delta.neg{background:#FFE3DE;color:#9E2A1C}
-.pos{color:var(--good)} .neg{color:var(--bad)}
-.vs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-.vs>div{background:rgba(255,255,255,.1);border-radius:18px;padding:12px 14px}
-.vs .k{font-size:12px;opacity:.75} .vs .v{font-family:var(--mono);font-size:20px;font-weight:400;letter-spacing:-.02em}
-.kpi.cherry .vs .v.pos{color:#B9F0CF} .kpi.cherry .vs .v.neg{color:#FFC2B8}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-.split>div{display:flex;flex-direction:column;background:rgba(255,255,255,.55);border-radius:18px;padding:12px 14px}
-.split .k{font-size:12px;color:var(--ink2)} .split .v{font-family:var(--mono);font-size:17px;font-weight:500}
-.fxline{font-size:12px;color:var(--ink2);margin-top:12px}
-:root[data-theme="dark"] .split>div{background:rgba(255,255,255,.05)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .split>div{background:rgba(255,255,255,.05)}}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border:1.5px solid var(--ink);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;background:transparent;display:inline-block;margin:0;vertical-align:baseline}
+.tag.f,.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1.5px solid var(--ink);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;background:rgba(255,255,255,.55)}
 
-.inv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media (max-width:560px){.inv{grid-template-columns:1fr 1fr}.inv>div:first-child{grid-column:1/-1}}
-.inv>div{border-radius:22px;padding:16px;min-height:118px;display:flex;flex-direction:column}
-.inv .k{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink2)}
-.inv .v{font-family:var(--mono);font-size:24px;font-weight:300;letter-spacing:-.03em;margin-top:auto}
-.inv .s{font-size:12px;color:var(--ink2);opacity:.8}
-.inv .t-peri{background:var(--peri)} .inv .t-sage{background:var(--sage)} .inv .t-butter{background:var(--butter)}
+.grid4{display:grid;grid-template-columns:1fr 1fr;gap:20px 14px;margin-top:6px}
+.grid4 .n{font-size:38px;font-weight:600;letter-spacing:-.045em;line-height:1}
+.grid4 .d{font-size:11.5px;color:var(--ink2);margin-top:6px;line-height:1.4}
+.grid4 hr{border:0;border-top:2.5px solid var(--ink);border-radius:2px;width:22px;margin:12px 0 0}
+.fxline{font-size:12px;color:var(--muted);margin-top:16px}
+.fxline button{background:none;border:0;padding:0;font-weight:800;text-decoration:underline;font-size:12px}
 
-.todo{display:flex;flex-direction:column;gap:8px}
-.todo label{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:14px 16px;border-radius:20px;background:var(--surface2);cursor:pointer}
-.todo input{appearance:none;-webkit-appearance:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--brand2);margin:1px 0 0;display:grid;place-items:center;background:transparent;cursor:pointer}
-.todo input:checked{background:var(--brand2)}
-.todo input:checked::after{content:"";width:8px;height:12px;border:solid var(--surface);border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
-.todo .t{font-weight:600}
-.todo .d{font-size:13px;color:var(--ink2);margin-top:3px}
-.todo .done{opacity:.6}
-.todo .done .t{text-decoration:line-through}
-.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--surface);color:var(--brand2);margin-left:8px;vertical-align:1px;border:1px solid var(--line)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row2 .card{min-height:196px;display:flex;flex-direction:column}
+.row2 .T{font-size:28px}
+.row2 .s{font-size:12px;color:var(--ink2);margin-top:6px}
+.row2 .v{margin-top:auto;font-size:24px;font-weight:700;letter-spacing:-.03em}
+.more{font-size:11px;font-weight:800;letter-spacing:.04em;margin-top:6px}
+
+.wave{position:relative;height:104px;margin:2px 0}
+.wave svg{position:absolute;inset:0;width:100%;height:100%}
+.wave .in{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-size:14px;font-weight:700}
+.wave .in b{font-weight:800;font-size:22px;letter-spacing:-.03em}
+.wave .in small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-align:right}
+
+/* goals */
+.todo{display:flex;flex-direction:column}
+.todo label{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:14px 0;border-top:1.5px dashed #d6d3cb;cursor:pointer}
+.todo label:first-child{border-top:0;padding-top:4px}
+.todo input{appearance:none;-webkit-appearance:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);margin:0;display:grid;place-items:center;background:transparent;cursor:pointer}
+.todo input:checked{background:var(--sage)}
+.todo input:checked::after{content:"";width:7px;height:12px;border:solid var(--ink);border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+.todo .t{font-weight:800;font-size:15px}
+.todo .d{font-size:12.5px;color:var(--ink2);margin-top:3px;line-height:1.5}
+.todo .done .t{text-decoration:line-through;opacity:.55}
+.todo .tag{font-size:10.5px;padding:1px 8px;margin-left:6px;border-width:1.2px;vertical-align:2px}
 
 /* charts */
 .chart{width:100%;position:relative}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
-.chart text{fill:var(--muted);font-family:var(--mono);font-size:11px}
-.chart .grid{stroke:var(--line);stroke-width:1}
-.legend{display:flex;gap:10px;font-size:12px;color:var(--ink2);flex-wrap:wrap}
-.legend span{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border-radius:999px;padding:4px 10px}
-.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
-.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:7px 10px;border-radius:12px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .1s;z-index:2}
+.chart text{fill:var(--muted);font-family:var(--font);font-size:11px;font-weight:700}
+.chart .grid{stroke:#E7E4DD;stroke-width:1}
+.legend{display:flex;gap:6px;font-size:12px;color:var(--ink);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--ink);border-radius:999px;padding:4px 11px;font-weight:700}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:7px 11px;border-radius:14px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .1s;z-index:3}
 .tip.on{opacity:1}
 
-.hbars{display:flex;flex-direction:column;gap:11px}
-.hbar{display:grid;grid-template-columns:84px 1fr auto;gap:10px;align-items:center;font-size:13px}
-.hbar .track{height:12px;background:var(--surface2);border-radius:999px;overflow:hidden;position:relative}
-.hbar .fill{height:100%;background:var(--exp);border-radius:999px}
-.hbar .fill.blue{background:var(--brand2)}
+.hbars{display:flex;flex-direction:column;gap:12px}
+.hbar{display:grid;grid-template-columns:86px 1fr auto;gap:10px;align-items:center;font-size:13px;font-weight:600}
+.hbar .track{height:14px;background:rgba(255,255,255,.7);border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;position:relative}
+.card:not(.c-y):not(.c-g):not(.c-l):not(.c-b):not(.c-p) .hbar .track{background:var(--surface2)}
+.hbar .fill{height:100%;background:var(--ink);border-radius:999px}
+.hbar .fill.blue{background:var(--ink)}
 .hbar .fill.over{background:var(--bad)}
-.hbar .pace{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.55}
-.hbar .meta{font-size:12px;color:var(--muted);grid-column:2/4;margin-top:-6px}
+.hbar .pace{position:absolute;top:0;bottom:0;width:2px;background:var(--bad)}
+.hbar .meta{font-size:12px;color:var(--ink2);grid-column:2/4;margin-top:-6px;font-weight:500}
 
-.bar{height:10px;background:var(--surface2);border-radius:999px;overflow:hidden;margin-top:8px}
-.bar>i{display:block;height:100%;background:var(--brand2);border-radius:999px}
+.bar{height:14px;background:var(--surface2);border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;background:var(--yellow);border-right:1.5px solid var(--ink);border-radius:999px}
 
-.ratio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media (max-width:520px){.ratio{grid-template-columns:1fr}}
-.ratio>div{border-radius:20px;padding:14px;background:var(--surface2)}
-.ratio .k{font-size:12px;color:var(--ink2);font-weight:600}
-.ratio .v{font-family:var(--mono);font-size:24px;font-weight:300;letter-spacing:-.03em}
-.ratio .s{font-size:12px;color:var(--muted)}
-.rings{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media (max-width:520px){.rings{grid-template-columns:1fr}}
-.ring{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:var(--surface2);border-radius:22px;padding:16px 10px}
-.ring svg{width:116px;height:116px}
-.ring .rv{font-family:var(--mono);font-size:26px;font-weight:300;letter-spacing:-.03em;fill:var(--ink)}
-.ring .k{font-weight:600;font-size:13px}
-.ring .s{font-size:12px;color:var(--muted)}
-.state{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600}
+.ratio{display:grid;grid-template-columns:1fr;gap:16px}
+.ratio>div{padding:0}
+.ratio .k{font-size:12px;color:var(--ink2);font-weight:700}
+.ratio .v{font-size:36px;font-weight:600;letter-spacing:-.045em;line-height:1.05}
+.ratio .s{font-size:12px;color:var(--ink2)}
+.ratio>div::after{content:"";display:block;width:22px;border-top:2.5px solid var(--ink);margin-top:10px}
+.ratio.three{grid-template-columns:1fr 1fr}
+.rings{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.ring{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:4px 0}
+.ring svg{width:100%;max-width:104px;height:auto}
+.ring .rv{font-size:24px;font-weight:800;letter-spacing:-.03em;fill:var(--ink)}
+.ring .k{font-weight:800;font-size:13px}
+.ring .s{font-size:11px;color:var(--ink2);line-height:1.35}
+.state{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800}
 .state.ok{color:var(--good)} .state.warn{color:var(--warn)} .state.bad{color:var(--bad)}
-
-.bignum{font-family:var(--mono);font-size:44px;font-weight:300;letter-spacing:-.035em;line-height:1.1}
+.bignum{font-size:56px;font-weight:600;letter-spacing:-.045em;line-height:1}
 
 .list{display:flex;flex-direction:column}
-.li{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.li{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-top:1.5px dashed #d6d3cb}
 .li:first-child{border-top:0}
-.li .nm{font-weight:500}
+.li .nm{font-weight:700}
 .li .meta{font-size:12px;color:var(--muted)}
-.bank{font-size:11px;font-weight:700;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}
+.bank{font-size:11px;font-weight:800;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--ink);flex:none;border:2px solid var(--ink)}
 
-/* tables & forms */
+/* transactions */
+.txl{display:flex;flex-direction:column}
+.tx{display:grid;grid-template-columns:40px 1fr auto;grid-template-areas:"d b amt" "d b cat";column-gap:10px;row-gap:4px;align-items:center;padding:12px 0;border-top:1.5px dashed #d6d3cb}
+.tx:first-child{border-top:0}
+.tx .d{grid-area:d;font-size:13px;font-weight:800;align-self:start;padding-top:2px}
+.tx .b{grid-area:b;min-width:0;display:flex;flex-direction:column}
+.tx .desc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.tx .amt{grid-area:amt;text-align:right;font-weight:800;white-space:nowrap}
+.tx select{grid-area:cat;justify-self:end;min-height:28px;padding:2px 10px;font-size:12px;max-width:120px}
+
+/* forms */
 .tablewrap{overflow-x:auto;margin-inline:-20px;padding-inline:20px}
 table{width:100%;border-collapse:collapse;font-size:14px}
-th{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+td{padding:9px 6px;border-bottom:1.5px dashed #d6d3cb;vertical-align:middle}
 td.r,th.r{text-align:right}
 td .desc{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
-td select{max-width:118px}
-select,input[type=text],input[type=number],input[type=date],input[type=month]{background:var(--surface2);border:1px solid transparent;border-radius:999px;padding:7px 14px;min-height:38px;max-width:100%}
-select:focus,input:focus{border-color:var(--brand2);outline:none}
-.btn{border:1.5px solid var(--ink);background:transparent;border-radius:999px;padding:8px 16px;font-weight:600;font-size:14px}
-.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
-.btn.ghost{border-color:transparent;background:transparent;color:var(--ink2)}
-.btn.danger{color:var(--bad)}
-.btn.sm{padding:4px 12px;font-size:13px;border-width:1px}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2)}
-.drop{display:block;border:2px dashed var(--peach);border-radius:24px;padding:28px;text-align:center;background:var(--blush);cursor:pointer}
-.drop.over{border-color:var(--brand)}
+select,input[type=text],input[type=number],input[type=date],input[type=month]{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:7px 14px;min-height:40px;max-width:100%;font-weight:600}
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:999px;padding:9px 16px;font-weight:800;font-size:14px}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.ghost{border-color:transparent;color:var(--ink2)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.ghost.danger{border-color:transparent}
+.btn.sm{padding:5px 12px;font-size:12.5px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--ink2)}
+.drop{display:block;border:2px dashed var(--ink);border-radius:26px;padding:28px 16px;text-align:center;background:var(--yellow);cursor:pointer}
+.drop.over{background:var(--sage)}
 .steps{margin:0;padding-left:20px;color:var(--ink2);font-size:14px}
-.chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface2);color:var(--ink2)}
-.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none}
+.chip{display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;border:1.2px solid var(--ink)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:700;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
-.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--blush);border-radius:16px;padding:8px 12px;font-size:13px}
-.back{margin-bottom:6px;align-self:flex-start}
-details summary{cursor:pointer}
-.txl{display:flex;flex-direction:column}
-.tx{display:grid;grid-template-columns:40px 1fr auto;grid-template-areas:"d b amt" "d b cat";column-gap:10px;row-gap:4px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
-.tx:first-child{border-top:0}
-.tx .d{grid-area:d;font-size:13px;color:var(--muted);align-self:start;padding-top:2px}
-.tx .b{grid-area:b;min-width:0;display:flex;flex-direction:column}
-.tx .desc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
-.tx .amt{grid-area:amt;text-align:right;font-weight:500;white-space:nowrap}
-.tx select{grid-area:cat;justify-self:end;min-height:28px;padding:2px 10px;font-size:12px;max-width:120px}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--pink);border-radius:18px;padding:8px 12px;font-size:13px;border:1.5px solid var(--ink)}
+.back{align-self:flex-start;background:#fff;border:0}
+details summary{cursor:pointer;font-weight:700}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+
+/* bottom nav: white pill, black active */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));pointer-events:none}
+nav.tabs .in{pointer-events:auto;max-width:536px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#fff;border-radius:999px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+nav.tabs button{border:0;background:transparent;padding:12px 2px;border-radius:999px;color:#777;font-size:12.5px;font-weight:800}
+nav.tabs button svg{display:none}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -224,9 +222,10 @@ details summary{cursor:pointer}
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><span class="mark" aria-hidden="true"><i></i></span><h1>두 나라 가계부</h1><span class="flags">AUD · KRW</span></div>
-    <div class="row"><span class="sync" id="sync">불러오는 중…</span><button class="btn sm" data-go="import">가져오기</button><button class="btn sm" data-go="settings">설정</button></div>
+    <button class="logo" data-tab="home"><i></i>두 나라 가계부</button>
+    <div class="hbtns"><button class="rbtn" data-go="import">가져오기</button><button class="rbtn" data-go="settings" aria-label="설정">설정</button></div>
   </header>
+  <span class="sync" id="sync">불러오는 중…</span>
   <div id="demoBanner" class="banner" hidden>
     <span><b>예시 데이터예요.</b> 실제 숫자가 아니에요. 은행 파일을 가져오면 예시는 사라져요.</span>
     <button class="btn sm primary" data-go="import">내 데이터 가져오기</button>
@@ -502,7 +501,7 @@ function recommendations(){
   // 3. category that grew most vs 3-month average
   if (avg){
     let worst = null;
-    for (const c of EXP_CATS){ const now = f.cats[c] || 0, was = avg.cats[c] || 0;
+    for (const c of EXP_CATS.filter(c => CAT[c].need === 'wants')){ const now = f.cats[c] || 0, was = avg.cats[c] || 0;
       // project this month's spending to month end if the month is still running
       const day = +today().slice(8); const proj = m === thisMonth() && day >= 10 ? now / day * daysIn(m) : now;
       if (was > 0 && proj > was * 1.25 && proj - was > (cur === 'AUD' ? 40 : 40000) && (!worst || proj - was > worst.diff)) worst = {c, was, proj, diff: proj - was}; }
@@ -516,7 +515,7 @@ function recommendations(){
   if (subs.length) recs.push({id:'subs', t:`구독 ${subs.length}개 점검하기`, d:`매달 나가는 돈이 ${fm(subs.reduce((s, x) => s + x.monthly, 0), cur)}예요. 한 달 동안 안 쓴 게 있으면 해지하세요. (${subs.slice(0,3).map(s => esc(s.desc.slice(0,14))).join(', ')})`, tag:'고정비'});
   // 6. investing habit
   if (baseInc > 0 && f.inv < baseInc * 0.05){
-    recs.push({id:'invest', t:`이번 달 투자 ${fm(Math.max(baseInc*0.1, 0), cur)} 넣기`, d:`이번 달 투자가 아직 ${fm(f.inv, cur)}예요. ETF처럼 분산된 상품에 매달 같은 날 같은 금액을 넣는 게 가장 오래가는 방법이에요.`, tag:'투자'});
+    recs.push({id:'invest', t:`이번 달 투자 ${fm(Math.max(baseInc*0.1, 0), cur)} 넣기`, d:`이번 달 투자가 아직 ${fm(Math.max(0, f.inv), cur)}예요. ETF처럼 분산된 상품에 매달 같은 날 같은 금액을 넣는 게 가장 오래가는 방법이에요.`, tag:'투자'});
   }
   // 7. FX awareness (KRW investing from AUD income)
   if (h.krw > 0 && h.aud > 0) recs.push({id:'fx', t:`환율 기록 업데이트`, d:`지금 앱 환율은 1 AUD = ₩${S.settings.fx.toLocaleString('ko-KR')} (${S.settings.fxDate})예요. 한국으로 보낼 땐 환율이 좋을 때 한 번에, 수수료 낮은 송금(Wise 등)으로 보내세요.`, tag:'환율'});
@@ -658,11 +657,11 @@ function lineChart(series, cur, opt={}){
   const step = Math.ceil(series.length/6);
   const gid = 'g' + uid();
   return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opt.label||'추이')}">
-    <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".2"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#F6F47C" stop-opacity=".95"/><stop offset="1" stop-color="#F6F47C" stop-opacity=".15"/></linearGradient></defs>
     ${ticks.map(t => `<line class="grid" x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L}" y="${y(t)-4}">${fc(t, cur)}</text>`).join('')}
     <path d="${area}" fill="url(#${gid})"/>
-    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${last[0]}" cy="${last[1]}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+    <path d="${path}" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="5" fill="#F6F47C" stroke="var(--ink)" stroke-width="2.5"/>
     ${series.map((p, i) => (i % step === 0 || i === series.length-1) && !(i !== series.length-1 && series.length-1-i < step/2) ? `<text x="${x(i)}" y="${H-5}" text-anchor="${i === 0 ? 'start' : i === series.length-1 ? 'end' : 'middle'}">${esc(p.label || monthLabel(p.m))}</text>` : '').join('')}
     ${series.map((p, i) => `<rect x="${x(i) - cw/2}" y="0" width="${cw}" height="${H}" fill="transparent" data-tip="${esc(p.label || monthFull(p.m))}|${esc(fm(p.v, cur))}" data-cx="${x(i)/W}" data-cy="${y(p.v)/H}"/>`).join('')}
   </svg><div class="tip"></div></div>`;
@@ -704,6 +703,35 @@ function wireTips(root){
 const bankBadge = a => { const b = BANKS[a.bank] || BANKS.other; return `<span class="bank" style="background:${b.color}">${esc(b.short)}</span>`; };
 const curSeg = (name, val, opts) => `<div class="seg" role="group">${opts.map(([k, l]) => `<button data-set="${name}" data-val="${k}" aria-pressed="${val===k}">${l}</button>`).join('')}</div>`;
 
+/* ================= kitsch shapes ================= */
+function SH(kind, o={}){
+  const s = o.s || 80, pos = `${o.r != null ? `right:${o.r}px;` : ''}${o.l != null ? `left:${o.l}px;` : ''}${o.t != null ? `top:${o.t}px;` : ''}${o.b != null ? `bottom:${o.b}px;` : ''}width:${s}px;height:${s}px;${o.rot ? `transform:rotate(${o.rot}deg);` : ''}`;
+  const c = o.c || '#fff', ink = '#161616';
+  let g = '';
+  if (kind === 'flower'){ const n = o.n || 6, id = 'p' + uid();
+    g = `<g fill="${c}"><circle cx="100" cy="100" r="34"/><g id="${id}"><ellipse cx="100" cy="46" rx="${n === 6 ? 30 : 27}" ry="40"/></g>${Array.from({length:n-1}, (_, i) => `<use href="#${id}" transform="rotate(${(i+1)*360/n} 100 100)"/>`).join('')}</g>`;
+    return `<svg class="sh" aria-hidden="true" style="${pos}" viewBox="0 0 200 200">${g}</svg>`; }
+  if (kind === 'star') g = `<path fill="${c}" stroke="${ink}" stroke-width="3" stroke-linejoin="round" d="M50 4 L61 37 L96 38 L68 59 L78 94 L50 73 L22 94 L32 59 L4 38 L39 37 Z"/>`;
+  else if (kind === 'sparkle') g = `<path fill="${c}" d="M50 0 C58 30 70 42 100 50 C70 58 58 70 50 100 C42 70 30 58 0 50 C30 42 42 30 50 0Z"/>`;
+  else if (kind === 'asterisk') g = `<g stroke="${ink}" stroke-width="10" stroke-linecap="round"><path d="M50 10v80M10 50h80M21.7 21.7l56.6 56.6M78.3 21.7 21.7 78.3"/></g>`;
+  else if (kind === 'smiley') g = `<path fill="#fff" stroke="${ink}" stroke-width="3" d="M50 6 C62 6 64 20 76 22 C88 24 96 34 92 46 C88 56 96 66 88 76 C80 86 66 80 58 88 C50 96 38 94 32 84 C26 74 12 76 8 64 C4 52 14 44 12 32 C10 20 22 12 34 14 C42 16 42 6 50 6Z"/><circle cx="40" cy="46" r="4" fill="${ink}"/><circle cx="60" cy="46" r="4" fill="${ink}"/><path d="M40 60 Q50 68 60 60" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`;
+  else if (kind === 'dashring') g = `<circle cx="50" cy="50" r="46" fill="none" stroke="${ink}" stroke-width="3" stroke-dasharray="6 7"/>`;
+  else if (kind === 'circle') g = `<circle cx="50" cy="50" r="50" fill="${c}"/>`;
+  else if (kind === 'pill') return `<svg class="sh" aria-hidden="true" style="${pos}height:${s/2}px" viewBox="0 0 100 50"><rect width="100" height="50" rx="25" fill="${c}"/></svg>`;
+  return `<svg class="sh" aria-hidden="true" style="${pos}" viewBox="0 0 100 100">${g}</svg>`;
+}
+// a small shape "stage" at the top of each tab, so every page opens with the same playful hero
+function stage(kind){
+  const sets = {
+    flow:     SH('flower',{c:'#fff',l:150,t:-6,s:150,n:6}) + SH('sparkle',{c:'#F6F47C',l:24,t:22,s:58}) + SH('pill',{c:'#BFDDB4',r:-20,t:40,s:90}),
+    budget:   SH('circle',{c:'#D9CCE8',l:-30,t:-10,s:120}) + SH('star',{c:'#F6F47C',l:150,t:14,s:62,rot:12}) + SH('asterisk',{r:30,t:26,s:44}),
+    plan:     SH('sparkle',{c:'#fff',l:40,t:-4,s:110}) + SH('flower',{c:'#F4C6D9',r:-30,t:-26,s:150,n:5}) + SH('dashring',{l:190,t:30,s:60}),
+    import:   SH('flower',{c:'#F6F47C',r:-20,t:-20,s:140,n:6}) + SH('smiley',{l:30,t:20,s:62}),
+    settings: SH('star',{c:'#fff',l:40,t:10,s:70,rot:-10}) + SH('circle',{c:'#BFDDB4',r:-24,t:-20,s:110}),
+  };
+  return `<div class="stage" aria-hidden="true">${sets[kind] || ''}</div>`;
+}
+
 /* ================= TAB 1: 홈 ================= */
 // first 10 days of a month (or no income yet): show last month's full picture instead of a near-empty one
 function homeMonth(){ const m = focusMonth(); return m === thisMonth() && (+today().slice(8) < 10 || flow(m, 'ALL-AUD').inc <= 0) && monthsWithData().some(x => x < m) ? addMonths(m, -1) : m; }
@@ -711,45 +739,63 @@ function viewHome(){
   const cur = homeCur, mode = 'ALL-' + cur, m = homeMonth(), pm = addMonths(m, -1);
   const f = flow(m, mode), p = flow(pm, mode), h = holdings(cur);
   const incDiff = f.inc - p.inc, incPct = pct(incDiff, p.inc);
-  const net = f.inc - f.exp, pnet = p.inc - p.exp;
+  const net = f.inc - f.exp;
   const other = cur === 'AUD' ? 'KRW' : 'AUD';
   const recs = recommendations(), done = S.settings.todoDone[m] || {};
   const invested = h.stock + h.invest + h.saving;
+  const ws = worthSeries(cur); const growth = ws.length >= 2 ? ws[ws.length-1].v - ws[0].v : null;
+  const rate = f.inc > 0 ? Math.round(net / f.inc * 100) : null;
+  const up = p.inc > 0 && incDiff >= 0;
+  const split = v => { const s = fm(v, cur); const i = s.search(/[0-9]/); return [s.slice(0, i), s.slice(i)]; };
+  const [sym, amt] = split(f.inc);
+  const cats = EXP_CATS.map(c => [c, f.cats[c] || 0]).filter(([, v]) => v > 0.5).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const stockNames = S.settings.accounts.filter(a => a.type === 'stock').map(a => esc(a.name)).join(', ');
   return `<div class="stack">
-    <div class="pagehead"><h2>${monthFull(m)}</h2>${curSeg('homeCur', cur, [['AUD','AUD로 보기'],['KRW','원화로 보기']])}</div>
-    <section class="kpis">
-      <div class="card kpi cherry">
-        <span class="label">${monthLong(m)}에 번 돈</span>
-        <div class="big num">${fm(f.inc, cur)}</div>
-        <div style="margin-top:8px">${p.inc > 0 ? `<span class="delta ${incDiff >= 0 ? 'pos' : 'neg'}">지난달보다 <span class="num">${fm(incDiff, cur, {sign:true})}</span>${incPct != null ? ` (${incPct >= 0 ? '+' : ''}${incPct.toFixed(0)}%)` : ''}</span>` : `<span class="tiny">지난달 기록이 없어서 비교할 수 없어요</span>`}</div>
-        <div class="vs">
-          <div><span class="k">${monthLong(m)} 쓴 돈</span><div class="v num">${fm(f.exp, cur)}</div></div>
-          <div><span class="k">${monthLong(m)} 남은 돈</span><div class="v num ${net >= 0 ? 'pos' : 'neg'}">${fm(net, cur, {sign:true})}</div><span class="tiny muted">지난달 <span class="num">${fm(pnet, cur, {sign:true})}</span></span></div>
-        </div>
-      </div>
-      <div class="card kpi blush">
-        <span class="label">현재 총 재산</span>
-        <div class="big num">${fm(h.total, cur)}</div>
-        <div class="alt num">= ${fm(conv(h.total, cur, other), other)}</div>
-        <div class="split">
-          <div><span class="k">호주 돈</span><span class="v num">${fm(h.aud, 'AUD')}</span></div>
-          <div><span class="k">한국 돈</span><span class="v num">${fm(h.krw, 'KRW')}</span></div>
-        </div>
-        <div class="fxline">환율 1 AUD = ₩${S.settings.fx.toLocaleString('ko-KR')} · ${esc(S.settings.fxDate)} 기준 · <button class="btn ghost sm" data-go="settings" style="padding:0">바꾸기</button></div>
-      </div>
+    <div class="hero" aria-hidden="true">
+      ${SH('flower',{c:'#fff',l:60,t:-26,s:280,n:6})}
+      ${SH('star',{c:'#F6F47C',r:18,t:46,s:60,rot:8})}
+      ${SH('pill',{c:'#D9CCE8',l:-20,t:120,s:92})}
+      <span class="count">${monthLong(m)}</span>
+      ${incPct != null ? `<span class="stick ${up ? '' : 'neg'}">${incPct >= 0 ? '+' : ''}${incPct.toFixed(0)}% ${up ? '↑' : '↓'}</span>` : ''}
+    </div>
+    <section class="panel">
+      ${SH('circle',{c:'#BFDDB4',r:-30,t:-30,s:130})}
+      <div class="who"><span>${monthLong(m)}에 번 돈</span>${p.inc > 0 ? `<span class="badge ${up ? '' : 'neg'}">${up ? 'GOOD MONTH' : 'SLOW MONTH'}</span>` : ''}</div>
+      <div class="big num"><small>${sym}</small>${amt}</div>
+      <div class="sub">${p.inc > 0 ? `지난달보다 <b>${fm(Math.abs(incDiff), cur)} ${up ? '더' : '덜'}</b> 벌었어요. ` : '지난달 기록이 없어서 비교는 다음 달부터 돼요. '}쓴 돈은 ${fm(f.exp, cur)}, 남은 돈은 <b>${fm(net, cur, {sign:true})}</b>이에요.</div>
+      <div class="tags">${curSeg('homeCur', cur, [['AUD','AUD'],['KRW','KRW']])}${rate != null ? `<span class="tag">♡ 저축률 ${rate}%</span>` : ''}</div>
     </section>
     <section class="card">
-      <div class="head"><h2>투자한 재산</h2><span class="small muted">총 <b class="num">${fm(invested, cur)}</b> · 재산의 ${h.total > 0 ? Math.round(invested/h.total*100) : 0}%</span></div>
-      <div class="inv">
-        <div class="t-peri"><span class="k">주식</span><div class="v num">${fm(h.stock, cur)}</div><span class="s">${S.settings.accounts.filter(a => a.type === 'stock').map(a => esc(a.name)).join(', ') || '주식 계좌를 추가하세요'}</span></div>
-        <div class="t-sage"><span class="k">예적금</span><div class="v num">${fm(h.saving, cur)}</div><span class="s">${S.settings.accounts.filter(a => a.type === 'saving').length}개 계좌</span></div>
-        <div class="t-butter"><span class="k">기타 투자</span><div class="v num">${fm(h.invest, cur)}</div><span class="s">연금·super·코인 등</span></div>
+      ${SH('asterisk',{r:20,b:20,s:44})}
+      <div class="head"><span class="T">지금<br>총 재산</span><button class="va" data-set="homeCur" data-val="${other}">${other} 보기 ↗</button></div>
+      <div class="grid4">
+        <div><div class="n num">${fc(h.total, cur)}</div><div class="d">전체 재산<br>= ${fm(conv(h.total, cur, other), other)}</div><hr></div>
+        <div><div class="n num">${fc(h.aud, 'AUD')}</div><div class="d">호주 돈<br>${S.settings.accounts.filter(a => a.cur === 'AUD').length}개 계좌</div><hr></div>
+        <div><div class="n num">${fc(h.krw, 'KRW')}</div><div class="d">한국 돈<br>${S.settings.accounts.filter(a => a.cur === 'KRW').length}개 계좌</div><hr></div>
+        <div><div class="n num">${growth == null ? '—' : fc(growth, cur, {sign:true})}</div><div class="d">${ws.length >= 2 ? `${ws.length-1}개월 동안<br>늘어난 재산` : '재산 변화<br>두 달부터 보여요'}</div><hr></div>
       </div>
+      <div class="fxline">1 AUD = ₩${S.settings.fx.toLocaleString('ko-KR')} · ${esc(S.settings.fxDate)} 기준 · <button data-go="settings">환율 바꾸기</button></div>
     </section>
+    <div class="row2">
+      <section class="card c-y">${SH('dashring',{r:-38,b:-38,s:110})}
+        <span class="T">주식</span><span class="s">${stockNames || '설정에서 주식 계좌를 추가하세요'}</span><span class="v num">${fm(h.stock, cur)}</span><button class="more va" data-go="settings" style="text-align:left">업데이트 ↗</button></section>
+      <section class="card c-l">${SH('sparkle',{c:'#fff',r:-14,t:-14,s:86})}
+        <span class="T">예적금<br>· 기타</span><span class="s">예적금 ${fc(h.saving, cur)} · 기타 ${fc(h.invest, cur)}</span><span class="v num">${fm(h.saving + h.invest, cur)}</span><button class="more va" data-tab="plan" style="text-align:left">자산 계획 ↗</button></section>
+    </div>
+    <div class="wave"><svg viewBox="0 0 366 104" preserveAspectRatio="none" aria-hidden="true"><path fill="#F6F47C" d="M0 22 Q15 0 30 22 T61 22 T92 22 T122 22 T153 22 T183 22 T214 22 T244 22 T275 22 T305 22 T336 22 T366 22 V82 Q351 104 336 82 T305 82 T275 82 T244 82 T214 82 T183 82 T153 82 T122 82 T92 82 T61 82 T30 82 T0 82 Z"/></svg>
+      <div class="in"><span>투자한 재산 합계</span><span><b class="num">${fm(invested, cur)}</b><small>재산의 ${h.total > 0 ? Math.round(invested/h.total*100) : 0}%</small></span></div></div>
     <section class="card">
-      <div class="head"><h2>이번 달 목표</h2><span class="small muted">내 기록을 보고 추천했어요 · ${Object.values(done).filter(Boolean).length}/${recs.length} 완료</span></div>
+      ${SH('flower',{c:'#F4C6D9',r:-40,t:-40,s:150,n:5})}
+      <div class="head"><span class="T">이번 달<br>목표</span></div>
       <div class="todo">${recs.map(r => `<label class="${done[r.id] ? 'done' : ''}"><input type="checkbox" data-todo="${r.id}" ${done[r.id] ? 'checked' : ''}>
         <div><div class="t">${r.t}<span class="tag">${r.tag}</span></div><div class="d">${r.d}</div></div></label>`).join('')}</div>
+      <div class="tags"><span class="tag f">${Object.values(done).filter(Boolean).length} / ${recs.length} 완료</span><span class="tag">내 기록 보고 추천</span></div>
+    </section>
+    <section class="card c-g">
+      ${SH('smiley',{r:16,t:18,s:66})}
+      <div class="head"><span class="T">어디에<br>썼나</span></div>
+      ${cats.length ? `<div class="list">${cats.map(([c, v]) => `<div class="li"><span class="nm">${c}</span><b class="num">${fm(v, cur)}</b></div>`).join('')}</div>` : '<p class="small">이 달엔 지출 기록이 없어요.</p>'}
+      <div class="tags"><button class="tag" data-tab="flow">전체 보기 ↗</button></div>
     </section>
   </div>`;
 }
@@ -765,24 +811,25 @@ function viewFlow(){
   const incCats = Object.entries(f.incCats).sort((a, b) => b[1] - a[1]);
   const monthOpts = (ms.includes(thisMonth()) ? ms : [...ms, thisMonth()]).slice().reverse();
   return `<div class="stack">
+    ${stage('flow')}<div class="pagehead"><h2>수입·지출</h2></div>
     <div class="row between">
       <select id="flowMonth" aria-label="월">${monthOpts.map(x => `<option value="${x}" ${x===m?'selected':''}>${monthFull(x)}</option>`).join('')}</select>
       ${curSeg('flowMode', mode, [['ALL-AUD','전체 AUD'],['ALL-KRW','전체 원화'],['AUD','호주 계좌만'],['KRW','한국 계좌만']])}
     </div>
     <div class="grid2">
-      <section class="card">
+      <section class="card c-g">${SH('circle',{c:'#fff',r:-30,t:-30,s:120})}
         <div class="head"><h2>번 돈</h2><b class="num pos" style="font-size:20px">${fm(f.inc, cur)}</b></div>
         <div class="legend" style="margin-bottom:6px"><span><i class="dot" style="background:var(--bank)"></i>계좌 <b class="num">${fm(f.incBank, cur)}</b></span><span><i class="dot" style="background:var(--cash)"></i>현금 <b class="num">${fm(f.incCash, cur)}</b></span></div>
         ${incomeChart(last6, mode)}
         <div class="list" style="margin-top:10px">${incCats.map(([c, v]) => `<div class="li"><span>${c}</span><span class="num">${fm(v, cur)}</span></div>`).join('') || '<p class="muted small">이 달엔 수입 기록이 없어요.</p>'}</div>
       </section>
-      <section class="card">
+      <section class="card c-y">${SH('asterisk',{r:18,b:18,s:40})}
         <div class="head"><h2>쓴 돈</h2><b class="num" style="font-size:20px;color:var(--exp)">${fm(f.exp, cur)}</b></div>
         ${cats.length ? `<div class="hbars">${cats.map(([c, v]) => `<div class="hbar"><span>${c}</span><div class="track"><div class="fill" style="width:${v/maxc*100}%"></div></div><span class="num small">${fm(v, cur)}</span></div>`).join('')}</div>` : '<p class="muted small">이 달엔 지출 기록이 없어요.</p>'}
-        <p class="tiny muted" style="margin-top:12px">내 계좌끼리 옮긴 돈은 빼고, 투자로 보낸 돈(${fm(f.inv, cur)})은 지출이 아니라 저축으로 따로 쳐요.</p>
+        <p class="tiny muted" style="margin-top:12px">내 계좌끼리 옮긴 돈은 빼고, 투자로 보낸 돈(${fm(Math.max(0, f.inv), cur)})은 지출이 아니라 저축으로 따로 쳐요.</p>
       </section>
     </div>
-    <section class="card">
+    <section class="card ">${SH('sparkle',{c:'#D9CCE8',r:-12,t:-12,s:80})}
       <div class="head"><h2>현금·직접 기록</h2><span class="tiny muted">현금으로 받거나 쓴 돈은 여기에 적어 두세요</span></div>
       <form id="addTx" class="row">
         <select id="atType" aria-label="수입 또는 지출"><option value="-1">지출</option><option value="1">수입</option></select>
@@ -835,8 +882,8 @@ function viewBudget(){
   const subs = subscriptions(cur);
   const fixed = subs.reduce((s, x) => s + x.monthly, 0);
   return `<div class="stack">
-    <div class="pagehead"><h2>${monthFull(m)} 진단</h2>${curSeg('budgetCur', cur, [['AUD','AUD'],['KRW','원화']])}</div>
-    <section class="card">
+    ${stage('budget')}<div class="pagehead"><h2>${monthLong(m)} 진단</h2>${curSeg('budgetCur', cur, [['AUD','AUD'],['KRW','원화']])}</div>
+    <section class="card c-l">${SH('star',{c:'#F6F47C',r:16,t:16,s:52})}
       <div class="head"><h2>지출 속도</h2><span class="tiny muted">${isNow ? `${dim}일 중 ${day}일 지남` : '마감된 달'}</span></div>
       <div class="ratio">
         <div><span class="k">지금까지 쓴 돈</span><div class="v num">${fm(f.exp, cur)}</div><span class="s">하루 평균 ${fm(f.exp/Math.max(1, day), cur)}</span></div>
@@ -844,7 +891,7 @@ function viewBudget(){
         <div><span class="k">평소 대비</span><div class="v num ${avg && projected > avg.exp ? 'neg' : 'pos'}">${avg && avg.exp > 0 ? `${projected >= avg.exp ? '+' : ''}${Math.round((projected/avg.exp - 1)*100)}%` : '—'}</div><span class="s">최근 ${avg ? avg.months : 0}개월 평균과 비교</span></div>
       </div>
     </section>
-    <section class="card">
+    <section class="card ">${SH('flower',{c:'#F4C6D9',r:-40,t:-40,s:150,n:5})}
       <div class="head"><h2>50 / 30 / 20 점검</h2><span class="tiny muted">소득을 필수 50%, 선택 30%, 저축 20%로 나누는 기본 규칙</span></div>
       <div class="rings">
         ${ring('필수 지출', r(needs), 50, `목표 50% 이하 · ${fm(needs, cur)}`, st(r(needs), 50))}
@@ -853,7 +900,7 @@ function viewBudget(){
       </div>
       <p class="tiny muted" style="margin-top:10px">필수: 생활비·주거·학비·교통·건강. 선택: 음식·약속·데이트·여행·취미·쇼핑·구독 등.</p>
     </section>
-    <section class="card">
+    <section class="card c-y">${SH('dashring',{r:-34,t:-34,s:104})}
       <div class="head"><h2>카테고리 예산</h2><span class="tiny muted">세로선 = 오늘까지 써도 되는 만큼</span></div>
       <div class="hbars">${bcats.map(c => { const spent = f.cats[c] || 0, b = budgets[c] || 0;
         const w = b > 0 ? Math.min(100, spent / b * 100) : 0; const over = b > 0 && spent > b * (isNow ? paceFrac : 1) * 1.05;
@@ -863,7 +910,7 @@ function viewBudget(){
           ${b > 0 ? `<span class="meta">${spent > b ? `<span class="neg">${fm(spent - b, cur)} 넘었어요</span>` : `남은 돈 ${fm(b - spent, cur)}${isNow ? ` · 하루 ${fm((b - spent) / Math.max(1, dim - day + 1), cur)}씩 쓸 수 있어요` : ''}`}</span>` : ''}</div>`; }).join('') || '<p class="muted small">지출이 생기면 카테고리가 여기 나와요.</p>'}</div>
       <p class="tiny muted" style="margin-top:10px">예산 칸에 숫자를 적으면 바로 저장돼요. ${avg ? '처음엔 평소 지출보다 10% 낮게 잡아 보세요.' : ''}</p>
     </section>
-    <section class="card">
+    <section class="card c-b">${SH('smiley',{r:16,t:16,s:64})}
       <div class="head"><h2>매달 나가는 돈 (고정비)</h2><span class="num">${fm(fixed, cur)}/월</span></div>
       <div class="list">${subs.map(s => `<div class="li"><span><span class="nm">${esc(s.desc)}</span></span><span class="num small">${fm(s.monthly, cur)}</span></div>`).join('') || '<p class="muted small">최근 3개월에서 매달 비슷한 금액이 나간 곳을 찾으면 여기 보여줘요.</p>'}</div>
       ${subs.length ? `<p class="tiny muted" style="margin-top:8px">1년이면 <b class="num">${fm(fixed*12, cur)}</b>이에요. 안 쓰는 구독 하나만 끊어도 바로 저축이 늘어요.</p>` : ''}
@@ -875,8 +922,8 @@ function ring(label, v, target, sub, state){
   const R = 46, C = 2 * Math.PI * R, val = v == null ? 0 : Math.max(0, Math.min(100, v));
   const tAng = target / 100 * 2 * Math.PI - Math.PI / 2;
   return `<div class="ring"><svg viewBox="0 0 116 116" role="img" aria-label="${esc(label)} ${v == null ? '없음' : v.toFixed(0) + '%'}">
-    <circle cx="58" cy="58" r="${R}" fill="none" stroke="var(--line)" stroke-width="10"/>
-    <circle cx="58" cy="58" r="${R}" fill="none" stroke="var(--brand2)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C * val / 100} ${C}" ${val <= 0 ? 'visibility="hidden"' : ''} transform="rotate(-90 58 58)"/>
+    <circle cx="58" cy="58" r="${R}" fill="none" stroke="#ECE9E2" stroke-width="12"/>
+    <circle cx="58" cy="58" r="${R}" fill="none" stroke="var(--ink)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C * val / 100} ${C}" ${val <= 0 ? 'visibility="hidden"' : ''} transform="rotate(-90 58 58)"/>
     <line x1="${58 + (R-8) * Math.cos(tAng)}" y1="${58 + (R-8) * Math.sin(tAng)}" x2="${58 + (R+8) * Math.cos(tAng)}" y2="${58 + (R+8) * Math.sin(tAng)}" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
     <text x="58" y="66" text-anchor="middle" class="rv">${v == null ? '—' : Math.round(v) + '%'}</text></svg>
     <span class="k">${esc(label)}</span><span class="s">${sub}</span>${state}</div>`;
@@ -897,25 +944,25 @@ function viewPlan(){
   const sim = simulate(h.stock + h.invest, monthly, c.rate, c.years);
   const contrib = h.stock + h.invest + monthly * 12 * c.years;
   return `<div class="stack">
-    <div class="pagehead"><h2>자산 계획</h2>${curSeg('planCur', cur, [['AUD','AUD'],['KRW','원화']])}</div>
-    <section class="card">
+    ${stage('plan')}<div class="pagehead"><h2>자산 계획</h2>${curSeg('planCur', cur, [['AUD','AUD'],['KRW','원화']])}</div>
+    <section class="card ">${SH('asterisk',{r:20,t:22,s:40})}
       <div class="head"><h2>순자산 추이</h2><span class="small">${ws.length >= 2 ? `<span class="num ${growth >= 0 ? 'pos' : 'neg'}">${fm(growth, cur, {sign:true})}</span> <span class="muted">· ${ws.length-1}개월 동안 · 한 달 평균 <span class="num">${fm(perMonth, cur, {sign:true})}</span></span>` : ''}</span></div>
       ${lineChart(ws, cur, {label:'순자산 추이'})}
     </section>
     <div class="grid2">
-      <section class="card">
+      <section class="card c-g">${SH('smiley',{r:16,t:16,s:64})}
         <div class="head"><h2>비상금 체력</h2>${efMonths == null ? '' : efMonths >= 6 ? '<span class="state ok">● 든든해요</span>' : efMonths >= 3 ? '<span class="state ok">● 괜찮아요</span>' : efMonths >= 1 ? '<span class="state warn">▲ 더 모아요</span>' : '<span class="state bad">■ 부족해요</span>'}</div>
         <div class="bignum">${efMonths == null ? '—' : efMonths.toFixed(1) + '개월'}</div>
         <p class="small ink2" style="margin-top:4px">수입이 끊겨도 지금 바로 쓸 수 있는 돈(${fm(liquid, cur)})으로 버틸 수 있는 기간이에요. 학생·사회초년생은 3개월, 직장인은 6개월이 기본이에요.</p>
         ${efMonths != null && efMonths < 3 ? `<p class="small" style="margin-top:8px">3개월치까지 <b class="num">${fm(avg.exp*3 - liquid, cur)}</b> 남았어요.</p>` : ''}
       </section>
-      <section class="card">
+      <section class="card c-l">${SH('sparkle',{c:'#fff',r:-14,t:-14,s:86})}
         <div class="head"><h2>재산 구성</h2><span class="tiny muted">총 ${fm(h.total, cur)}</span></div>
         <div class="hbars">${comp.map(([k, v]) => `<div class="hbar"><span>${k}</span><div class="track"><div class="fill blue" style="width:${Math.max(0, v)/maxComp*100}%"></div></div><span class="num small">${h.total > 0 ? Math.round(v/h.total*100) : 0}%</span></div>`).join('')}</div>
         <p class="tiny muted" style="margin-top:10px">${h.cash + h.bank > h.total * 0.6 && h.total > 0 ? '재산 대부분이 입출금·현금에 있어요. 비상금을 뺀 나머지는 이자 높은 예적금이나 투자로 옮기는 걸 고려해 보세요.' : '입출금은 비상금만큼, 나머지는 예적금·투자로 나누는 게 기본이에요.'}</p>
       </section>
     </div>
-    <section class="card">
+    <section class="card ">${SH('flower',{c:'#F4C6D9',r:-40,t:-40,s:150,n:5})}
       <div class="head"><h2>저축 목표</h2><span class="tiny muted">기한까지 매달 얼마씩 모아야 하는지 계산해요</span></div>
       <div class="list">${S.settings.goals.map(g => { const a = g.acct ? acctById(g.acct) : null;
         const sv = a ? conv(currentBalance(a), a.cur, g.cur) : (g.saved || 0); const p = Math.max(0, Math.min(100, sv / g.target * 100));
@@ -933,7 +980,7 @@ function viewPlan(){
         <button class="btn primary">추가</button>
       </form>
     </section>
-    <section class="card">
+    <section class="card c-y">${SH('star',{c:'#fff',r:16,t:16,s:52})}
       <div class="head"><h2>복리 계산기</h2><span class="tiny muted">지금 투자 재산 ${fm(h.stock + h.invest, cur)}에서 시작</span></div>
       <form id="calcForm" class="row">
         <label class="f">매달 투자<input type="number" id="cMonthly" value="${monthly}" min="0" step="any" style="width:130px"></label>
@@ -961,9 +1008,9 @@ function simulate(start, monthly, rate, years){
 /* ================= 가져오기 / 설정 ================= */
 function viewImport(){
   return `<div class="stack">
-    <button class="btn sm back" data-tab="home">← 돌아가기</button>
-    <section class="card">
-      <h2 style="margin-bottom:10px">은행 파일 가져오기</h2>
+    ${stage('import')}<div class="pagehead"><h2>가져오기</h2></div>
+    <section class="card">${SH('sparkle',{c:'#D9CCE8',r:-12,t:-12,s:80})}
+      <h2 style="margin-bottom:10px">은행 파일</h2>
       <div class="row" style="margin-bottom:12px;align-items:flex-end"><label class="f">어느 계좌 파일인가요?<select id="impAcct">${S.settings.accounts.filter(a => a.type === 'bank' || a.type === 'saving').map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('')}<option value="__new">+ 새 계좌로 넣기</option></select></label>
         <span id="impNew" class="row" hidden><input type="text" id="impNewName" placeholder="계좌 이름 (예: CommBank 저축)" style="min-width:200px"><select id="impNewType" aria-label="종류"><option value="bank">입출금</option><option value="saving">예적금</option></select><select id="impNewCur" aria-label="통화"><option>AUD</option><option>KRW</option></select></span></div>
       <label class="drop" id="drop" for="impFile"><div><b>파일을 끌어다 놓거나 눌러서 고르세요</b></div><div class="small muted">CSV · XLS · XLSX · 이미 넣은 거래는 건너뛰어요</div></label>
@@ -980,8 +1027,8 @@ function viewImport(){
 }
 function viewSettings(){
   return `<div class="stack">
-    <button class="btn sm back" data-tab="home">← 돌아가기</button>
-    <section class="card"><h2 style="margin-bottom:10px">환율</h2>
+    ${stage('settings')}<div class="pagehead"><h2>설정</h2></div>
+    <section class="card c-y">${SH('star',{c:'#fff',r:16,t:16,s:48})}<h2 style="margin-bottom:10px">환율</h2>
       <form id="fxForm" class="row"><span>1 AUD =</span><input type="number" id="fxIn" value="${S.settings.fx}" step="any" style="width:120px"><span>원</span><button class="btn primary">저장</button></form>
       <p class="tiny muted" style="margin-top:8px">${esc(S.settings.fxDate)} 기준. 자동으로는 못 가져와서 가끔 직접 바꿔 주세요.</p></section>
     <section class="card"><h2 style="margin-bottom:6px">계좌</h2>
