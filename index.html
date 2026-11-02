@@ -215,6 +215,29 @@ nav.tabs .in{pointer-events:auto;max-width:536px;margin:0 auto;display:grid;grid
 nav.tabs button{border:0;background:transparent;padding:12px 2px;border-radius:999px;color:#777;font-size:12.5px;font-weight:800}
 nav.tabs button svg{display:none}
 nav.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+
+/* total assets */
+.worth .who{margin-bottom:4px}
+.tot{font-size:46px;font-weight:700;letter-spacing:-.045em;line-height:1.05;margin:6px 0 4px}
+.compbar{display:flex;height:16px;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;margin:14px 0 10px}
+.compbar i{display:block;min-width:4px}
+.compbar i+i{border-left:1.5px solid var(--ink)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{border-radius:20px;padding:12px 14px;min-height:96px;display:flex;flex-direction:column}
+.tile .tk{display:flex;justify-content:space-between;font-size:12px;font-weight:800}
+.tile .tv{font-size:20px;font-weight:700;letter-spacing:-.03em;margin-top:auto}
+.tile .ts{font-size:11px;color:var(--ink2);line-height:1.35;margin-top:2px}
+/* subscriptions */
+.subs{display:flex;flex-direction:column}
+.subrow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-top:1.5px dashed #d6d3cb}
+.subrow:first-child{border-top:0}
+.subrow .sn{font-weight:800;font-size:15px}
+.subrow .sn .chip{margin-left:4px;vertical-align:2px}
+.subrow .sv{display:flex;flex-direction:column;align-items:flex-end;gap:0}
+.subrow .sv b{font-size:16px;font-weight:800}
+.subrow .sv .btn{padding:2px 0;font-size:11px;color:var(--muted)}
+nav.tabs .in{grid-template-columns:repeat(5,1fr)}
+nav.tabs button{font-size:12px;padding:12px 0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -235,6 +258,7 @@ nav.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
 <nav class="tabs" role="tablist" id="tabs"><div class="in">
   <button role="tab" data-tab="home" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
   <button role="tab" data-tab="flow"><svg viewBox="0 0 24 24"><path d="M7 17V7M7 7l-3 3M7 7l3 3M17 7v10M17 17l-3-3M17 17l3-3"/></svg>수입·지출</button>
+  <button role="tab" data-tab="subs"><svg viewBox="0 0 24 24"><path d="M4 7h16v10H4zM4 11h16"/></svg>구독</button>
   <button role="tab" data-tab="budget"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v8l6 4"/></svg>예산 진단</button>
   <button role="tab" data-tab="plan"><svg viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-4 3 3 5-6"/><path d="M15 8h3v3"/></svg>자산 계획</button>
 </div></nav>
@@ -252,7 +276,7 @@ const BANKS = {
   cash: {name:'현금',     short:'₩$',  color:'#14A38B'},
   other:{name:'기타',     short:'+',   color:'#6A7484'},
 };
-const ATYPES = {bank:'입출금', saving:'예적금', cash:'현금', stock:'주식', invest:'기타 투자'};
+const ATYPES = {bank:'입출금', saving:'예적금', cash:'현금', ewallet:'PayPal·전자지갑', stock:'주식', invest:'기타 투자'};
 // kind: income | expense | invest (counts as saving) | transfer (excluded)
 // need: needs (꼭 필요) | wants (선택)
 const CATS = [
@@ -445,7 +469,7 @@ function avgFlow(endMonth, n, mode){
   return avg;
 }
 function holdings(cur){
-  const h = {bank:0, saving:0, cash:0, stock:0, invest:0, total:0, aud:0, krw:0};
+  const h = {bank:0, saving:0, cash:0, ewallet:0, stock:0, invest:0, total:0, aud:0, krw:0};
   for (const a of S.settings.accounts){
     const b = currentBalance(a);
     if (a.cur === 'AUD') h.aud += b; else h.krw += b;
@@ -458,7 +482,7 @@ function worthSeries(cur, n=12){
   const ms = monthsWithData().slice(-n);
   return ms.map(m => {
     const end = m === thisMonth() ? today() : monthEnd(m);
-    let v = 0; for (const a of S.settings.accounts){ const b = balanceAt(a, end); if (b != null) v += conv(b, a.cur, cur); }
+    let v = 0; for (const a of S.settings.accounts){ let b = balanceAt(a, end); if (b == null && !allTx().some(t => t.acct === a.id) && (a.snaps || []).length) b = [...a.snaps].sort((x, y) => x.date < y.date ? -1 : 1)[0].bal; if (b != null) v += conv(b, a.cur, cur); }
     return {m, v};
   });
 }
@@ -476,6 +500,49 @@ function subscriptions(cur){
     if (r.amts.length > r.months.size * 2) continue; // frequent shops, not subscriptions
     const a = acctById(r.acct); out.push({desc:r.desc, cat:r.cat, monthly: conv(hi, a ? a.cur : 'AUD', cur)}); }
   return out.sort((a, b) => b.monthly - a.monthly);
+}
+
+/* ================= subscriptions ================= */
+const SUB_KNOWN = [
+  [/anthropic|claude/i, 'Claude', 'AI'], [/openai|chatgpt/i, 'ChatGPT', 'AI'], [/gemini|perplexity|midjourney/i, 'AI 서비스', 'AI'],
+  [/notion/i, 'Notion', '앱'], [/adobe/i, 'Adobe', '앱'], [/canva/i, 'Canva', '앱'], [/apple\.com|apple com\/bill/i, 'Apple (iCloud 등)', '앱'], [/google (storage|one)|google \*/i, 'Google One', '앱'],
+  [/netflix|넷플릭스/i, 'Netflix', '영상'], [/disney/i, 'Disney+', '영상'], [/youtube|유튜브/i, 'YouTube Premium', '영상'], [/stan\.com|binge|kayo|티빙|웨이브|왓챠|쿠팡플레이/i, '영상 스트리밍', '영상'],
+  [/spotify/i, 'Spotify', '음악'], [/멜론|지니뮤직|apple music/i, '음악 스트리밍', '음악'],
+  [/fitness first/i, 'Fitness First', '헬스장'], [/derrimut/i, 'Derrimut 24:7', '헬스장'], [/anytime fitness|jetts|goodlife|plus fitness|snap fitness|\bgym\b|헬스/i, '헬스장', '헬스장'],
+  [/amaysim|telstra|optus|vodafone|boost mobile|felix mobile/i, '휴대폰 요금', '통신'], [/broadband|\bnbn\b|aussie ?bb|superloop/i, '인터넷', '통신'],
+  [/edreams prime/i, 'eDreams Prime', '여행'], [/kaya\s*emporium|kayaemporium/i, 'Kaya Emporium', '작업'], [/입출통지|문자알림/i, '은행 문자 알림', '은행'], [/쿠팡 ?와우|wow 멤버십/i, '쿠팡 와우', '쇼핑'],
+];
+// Every subscription in the history: known services, anything categorised 구독, and very regular charges.
+function subsAll(cur){
+  const groups = {};
+  for (const t of allTx()){
+    if (t.amt >= 0) continue; const kind = (CAT[t.cat] || {}).k; if (kind !== 'expense') continue;
+    const a = acctById(t.acct); if (!a) continue;
+    let name = null, tag = null;
+    for (const [re, n, k] of SUB_KNOWN) if (re.test(t.desc)){ name = n; tag = k; break; }
+    const key = name || descKey(t.desc); if (!key) continue;
+    (groups[key] ??= {name, tag, key, desc: t.desc, cats: new Set(), tx: []});
+    groups[key].cats.add(t.cat); groups[key].tx.push({date: t.date, v: conv(-t.amt, a.cur, cur)});
+  }
+  const now = today(), daysAgo = d => (new Date(now) - new Date(d)) / 864e5;
+  const out = [];
+  for (const g of Object.values(groups)){
+    const tx = g.tx.sort((x, y) => x.date < y.date ? -1 : 1), months = new Set(tx.map(x => x.date.slice(0, 7)));
+    const vals = tx.map(x => x.v).sort((x, y) => x - y), med = vals[vals.length >> 1];
+    const stable = vals.filter(v => Math.abs(v - med) <= med * .1).length / vals.length;
+    const auto = !g.name && !g.cats.has('구독') && months.size >= 4 && stable >= .9 && tx.length <= months.size + 1
+      && ![...g.cats].some(c => ['세금·수수료', '주거·공과금', '생활비', '음식', '교통', '쇼핑'].includes(c)) && med < conv(300, 'AUD', cur);
+    if (!g.name && !g.cats.has('구독') && !auto) continue;
+    const last = tx[tx.length - 1].date, span = Math.max(1, monthsBetween(tx[0].date.slice(0, 7), last.slice(0, 7)) + 1);
+    const yearly = tx.length <= Math.ceil(span / 10) && med >= conv(60, 'AUD', cur);
+    const recent = tx.filter(x => daysAgo(x.date) <= 92).reduce((s, x) => s + x.v, 0);
+    const monthly = yearly ? med / 12 : (recent > 0 ? recent / 3 : med * Math.min(2, tx.length / span));
+    const active = daysAgo(last) <= (yearly ? 380 : 45);
+    const name = g.name || g.desc.replace(/value date.*|card xx\d+.*|\b[A-Z]{2,3} \d[\d.,]*$/i, '').replace(/^(sq|dbs|smp|paypal|pp)\s*\*\s*/i, '').trim().slice(0, 26);
+    out.push({key: g.key, name, tag: g.tag || (g.cats.has('구독') ? '구독' : '자동 감지'), monthly, yearly, active, last, first: tx[0].date, months: months.size, total: tx.reduce((s, x) => s + x.v, 0), n: tx.length});
+  }
+  const hidden = S.settings.subsHidden || {};
+  return out.map(s => Object.assign(s, {hidden: !!hidden[s.key]})).sort((a, b) => b.monthly - a.monthly);
 }
 
 /* ================= recommendations (this month's goals) ================= */
@@ -514,8 +581,8 @@ function recommendations(){
   const social = (f.cats['친구 약속']||0) + (f.cats['데이트']||0) + (f.cats['음식']||0);
   if (f.exp > 0 && social / f.exp > 0.3) recs.push({id:'social', t:`약속·외식 예산 정하기`, d:`음식·친구 약속·데이트가 지출의 ${Math.round(social/f.exp*100)}%예요. 한 달 상한(예: ${fm(social*0.8, cur)})을 정하고 '예산 진단' 탭에 적어 두세요.`, tag:'지출'});
   // 5. subscriptions
-  const subs = subscriptions(cur).filter(s => s.cat === '구독');
-  if (subs.length) recs.push({id:'subs', t:`구독 ${subs.length}개 점검하기`, d:`매달 나가는 돈이 ${fm(subs.reduce((s, x) => s + x.monthly, 0), cur)}예요. 한 달 동안 안 쓴 게 있으면 해지하세요. (${subs.slice(0,3).map(s => esc(s.desc.slice(0,14))).join(', ')})`, tag:'고정비'});
+  const subs = subsAll(cur).filter(s => s.active && !s.hidden);
+  if (subs.length) recs.push({id:'subs', t:`구독 ${subs.length}개 점검하기`, d:`매달 약 ${fm(subs.reduce((s, x) => s + x.monthly, 0), cur)}가 나가요. 한 달 동안 안 쓴 게 있으면 해지하세요. (${subs.slice(0,3).map(s => esc(s.name)).join(', ')})`, tag:'구독'});
   // 6. investing habit
   if (baseInc > 0 && f.inv < baseInc * 0.05){
     recs.push({id:'invest', t:`이번 달 투자 ${fm(Math.max(baseInc*0.1, 0), cur)} 넣기`, d:`이번 달 투자가 아직 ${fm(Math.max(0, f.inv), cur)}예요. ETF처럼 분산된 상품에 매달 같은 날 같은 금액을 넣는 게 가장 오래가는 방법이에요.`, tag:'투자'});
@@ -731,6 +798,7 @@ function stage(kind){
     plan:     SH('sparkle',{c:'#fff',l:40,t:-4,s:110}) + SH('flower',{c:'#F4C6D9',r:-30,t:-26,s:150,n:5}) + SH('dashring',{l:190,t:30,s:60}),
     import:   SH('flower',{c:'#F6F47C',r:-20,t:-20,s:140,n:6}) + SH('smiley',{l:30,t:20,s:62}),
     settings: SH('star',{c:'#fff',l:40,t:10,s:70,rot:-10}) + SH('circle',{c:'#BFDDB4',r:-24,t:-20,s:110}),
+    subs:     SH('flower',{c:'#D9CCE8',l:-30,t:-30,s:150,n:6}) + SH('star',{c:'#F6F47C',r:40,t:8,s:66,rot:-8}) + SH('pill',{c:'#F4C6D9',r:-24,t:56,s:86}),
   };
   return `<div class="stage" aria-hidden="true">${sets[kind] || ''}</div>`;
 }
@@ -753,6 +821,14 @@ function viewHome(){
   const [sym, amt] = split(f.inc);
   const cats = EXP_CATS.map(c => [c, f.cats[c] || 0]).filter(([, v]) => v > 0.5).sort((a, b) => b[1] - a[1]).slice(0, 4);
   const stockNames = S.settings.accounts.filter(a => a.type === 'stock').map(a => esc(a.name)).join(', ');
+  const names = types => S.settings.accounts.filter(a => types.includes(a.type) && Math.abs(currentBalance(a)) > 0.5);
+  const list = (types, f) => { const xs = names(types); return xs.length ? xs.slice(0, 2).map(f).join(' · ') + (xs.length > 2 ? ` 외 ${xs.length - 2}` : '') : '없음'; };
+  const groups = [
+    {k:'은행', v: h.bank + h.saving, c:'#D8D2C2', s: `${names(['bank','saving']).length}개 계좌 · 예적금 ${fc(h.saving, cur)}`},
+    {k:'현금', v: h.cash, c:'#BFDDB4', s: list(['cash'], a => `${esc(a.name.replace(/ ?\(.*\)/, ''))} ${fc(currentBalance(a), a.cur)}`)},
+    {k:'PayPal', v: h.ewallet, c:'#D9CCE8', s: list(['ewallet'], a => esc((a.name.match(/\((.*)\)/) || [])[1] || a.name))},
+    {k:'투자', v: h.stock + h.invest, c:'#F6F47C', s: `주식 ${fc(h.stock, cur)}${h.invest ? ` · 기타 ${fc(h.invest, cur)}` : ''}`},
+  ];
   return `<div class="stack">
     <div class="hero" aria-hidden="true">
       ${SH('flower',{c:'#fff',l:60,t:-26,s:280,n:6})}
@@ -768,25 +844,18 @@ function viewHome(){
       <div class="sub">${p.inc > 0 ? `지난달보다 <b>${fm(Math.abs(incDiff), cur)} ${up ? '더' : '덜'}</b> 벌었어요. ` : '지난달 기록이 없어서 비교는 다음 달부터 돼요. '}쓴 돈은 ${fm(f.exp, cur)}, 남은 돈은 <b>${fm(net, cur, {sign:true})}</b>이에요.</div>
       <div class="tags">${curSeg('homeCur', cur, [['AUD','AUD'],['KRW','KRW']])}${rate != null ? `<span class="tag">♡ 저축률 ${rate}%</span>` : ''}</div>
     </section>
-    <section class="card">
-      ${SH('asterisk',{r:20,b:20,s:44})}
-      <div class="head"><span class="T">지금<br>총 재산</span><button class="va" data-set="homeCur" data-val="${other}">${other} 보기 ↗</button></div>
-      <div class="grid4">
-        <div><div class="n num">${fc(h.total, cur)}</div><div class="d">전체 재산<br>= ${fm(conv(h.total, cur, other), other)}</div><hr></div>
-        <div><div class="n num">${fc(h.aud, 'AUD')}</div><div class="d">호주 돈<br>${S.settings.accounts.filter(a => a.cur === 'AUD').length}개 계좌</div><hr></div>
-        <div><div class="n num">${fc(h.krw, 'KRW')}</div><div class="d">한국 돈<br>${S.settings.accounts.filter(a => a.cur === 'KRW').length}개 계좌</div><hr></div>
-        <div><div class="n num">${growth == null ? '—' : fc(growth, cur, {sign:true})}</div><div class="d">${ws.length >= 2 ? `${ws.length-1}개월 동안<br>늘어난 재산` : '재산 변화<br>두 달부터 보여요'}</div><hr></div>
-      </div>
-      <div class="fxline">1 AUD = ₩${S.settings.fx.toLocaleString('ko-KR')} · ${esc(S.settings.fxDate)} 기준 · <button data-go="settings">환율 바꾸기</button></div>
+    <section class="card worth">
+      ${SH('asterisk',{r:22,b:18,s:30})}
+      <div class="who"><span>지금 총 재산</span><button class="va" data-set="homeCur" data-val="${other}">${other} 보기 ↗</button></div>
+      <div class="tot num">${fm(h.total, cur)}</div>
+      <div class="tiny ink2">= ${fm(conv(h.total, cur, other), other)} · 호주 ${fc(h.aud, 'AUD')} + 한국 ${fc(h.krw, 'KRW')}${growth == null ? '' : ` · ${ws.length-1}개월 동안 <b class="${growth >= 0 ? 'pos' : 'neg'}">${fc(growth, cur, {sign:true})}</b>`}</div>
+      <div class="compbar" role="img" aria-label="재산 구성">${groups.filter(g => g.v > 0).map(g => `<i style="flex:${g.v};background:${g.c}"></i>`).join('')}</div>
+      <div class="tiles">${groups.map(g => `<div class="tile" style="background:${g.c}">
+          <div class="tk"><span>${g.k}</span><span class="num">${h.total > 0 ? Math.round(Math.max(0, g.v) / h.total * 100) : 0}%</span></div>
+          <div class="tv num">${fm(g.v, cur)}</div>
+          <div class="ts">${g.s}</div></div>`).join('')}</div>
+      <div class="fxline">1 AUD = ₩${S.settings.fx.toLocaleString('ko-KR')} · ${esc(S.settings.fxDate)} 기준 · <button data-go="settings">금액·환율 업데이트</button></div>
     </section>
-    <div class="row2">
-      <section class="card c-y">${SH('dashring',{r:-38,b:-38,s:110})}
-        <span class="T">주식</span><span class="s">${stockNames || '설정에서 주식 계좌를 추가하세요'}</span><span class="v num">${fm(h.stock, cur)}</span><button class="more va" data-go="settings" style="text-align:left">업데이트 ↗</button></section>
-      <section class="card c-l">${SH('sparkle',{c:'#fff',r:-14,t:-14,s:86})}
-        <span class="T">예적금<br>· 기타</span><span class="s">예적금 ${fc(h.saving, cur)} · 기타 ${fc(h.invest, cur)}</span><span class="v num">${fm(h.saving + h.invest, cur)}</span><button class="more va" data-tab="plan" style="text-align:left">자산 계획 ↗</button></section>
-    </div>
-    <div class="wave"><svg viewBox="0 0 366 104" preserveAspectRatio="none" aria-hidden="true"><path fill="#F6F47C" d="M0 22 Q15 0 30 22 T61 22 T92 22 T122 22 T153 22 T183 22 T214 22 T244 22 T275 22 T305 22 T336 22 T366 22 V82 Q351 104 336 82 T305 82 T275 82 T244 82 T214 82 T183 82 T153 82 T122 82 T92 82 T61 82 T30 82 T0 82 Z"/></svg>
-      <div class="in"><span>투자한 재산 합계</span><span><b class="num">${fm(invested, cur)}</b><small>재산의 ${h.total > 0 ? Math.round(invested/h.total*100) : 0}%</small></span></div></div>
     <section class="card">
       ${SH('flower',{c:'#F4C6D9',r:-40,t:-40,s:150,n:5})}
       <div class="head"><span class="T">이번 달<br>목표</span></div>
@@ -932,6 +1001,47 @@ function ring(label, v, target, sub, state){
     <span class="k">${esc(label)}</span><span class="s">${sub}</span>${state}</div>`;
 }
 
+/* ================= TAB: 구독 ================= */
+function viewSubs(){
+  const cur = homeCur, all = subsAll(cur);
+  const act = all.filter(s => s.active && !s.hidden), gone = all.filter(s => !s.active && !s.hidden), hid = all.filter(s => s.hidden);
+  const month = act.reduce((s, x) => s + x.monthly, 0);
+  const byTag = {}; for (const s of act) byTag[s.tag] = (byTag[s.tag] || 0) + s.monthly;
+  const topTag = Object.entries(byTag).sort((a, b) => b[1] - a[1])[0];
+  const ai = act.filter(s => s.tag === 'AI');
+  const tips = [];
+  if (ai.length >= 2) tips.push(`AI 구독이 ${ai.length}개(${ai.map(s => esc(s.name)).join(', ')})예요. 하나만 남기면 1년에 ${fm(Math.min(...ai.map(s => s.monthly)) * 12, cur)} 아껴요.`);
+  const gym = all.filter(s => s.tag === '헬스장');
+  if (gym.length && !gym.some(s => s.active)) tips.push('헬스장 결제가 최근엔 안 보여요. 현금이나 다른 카드로 내고 있다면 수입·지출 탭에서 직접 기록해 두세요.');
+  if (act.some(s => s.yearly)) tips.push(`1년에 한 번 내는 구독(${act.filter(s => s.yearly).map(s => esc(s.name)).join(', ')})은 갱신일 전에 계속 쓸지 한 번 확인하세요.`);
+  if (!tips.length) tips.push('한 달에 한 번 이 목록을 보고, 지난달에 한 번도 안 쓴 구독은 바로 해지하는 게 가장 쉬운 절약이에요.');
+  const row = s => `<div class="subrow"><div class="sb"><div class="sn">${esc(s.name)} <span class="chip">${esc(s.tag)}</span></div>
+      <div class="tiny ink2">${s.yearly ? '1년마다 · ' : ''}마지막 ${+s.last.slice(5, 7)}/${+s.last.slice(8)} · ${s.months}개월 결제 · 지금까지 ${fm(s.total, cur)}</div></div>
+      <div class="sv"><b class="num">${fm(s.monthly, cur)}</b><span class="tiny ink2">/월</span>
+      <button class="btn sm ghost" data-subhide="${esc(s.key)}">${s.hidden ? '되돌리기' : '구독 아님'}</button></div></div>`;
+  return `<div class="stack">
+    ${stage('subs')}<div class="pagehead"><h2>구독</h2>${curSeg('homeCur', cur, [['AUD','AUD'],['KRW','KRW']])}</div>
+    <section class="card c-y">${SH('star',{c:'#fff',r:16,t:16,s:52})}
+      <div class="who"><span>매달 나가는 구독</span><span class="badge">${act.length}개 이용 중</span></div>
+      <div class="big num" style="font-size:52px">${fm(month, cur)}</div>
+      <div class="sub">1년이면 <b>${fm(month * 12, cur)}</b>이에요.${topTag ? ` 제일 많이 쓰는 건 <b>${esc(topTag[0])}</b> (${fm(topTag[1], cur)}/월).` : ''}</div>
+    </section>
+    <section class="card">${SH('sparkle',{c:'#D9CCE8',r:-12,t:-12,s:80})}
+      <div class="head"><span class="T" style="font-size:26px">이용 중</span></div>
+      <div class="subs">${act.map(row).join('') || '<p class="small ink2">최근 45일 안에 결제된 구독이 없어요.</p>'}</div>
+    </section>
+    <section class="card c-g">${SH('smiley',{r:16,t:16,s:60})}
+      <div class="head"><span class="T" style="font-size:26px">아끼는 법</span></div>
+      <div class="list">${tips.map(t => `<div class="li" style="grid-template-columns:1fr"><span class="small">${t}</span></div>`).join('')}</div>
+    </section>
+    ${gone.length ? `<section class="card c-b">${SH('dashring',{r:-30,t:-30,s:96})}
+      <div class="head"><span class="T" style="font-size:26px">끊긴 구독</span><span class="tiny ink2">45일 넘게 결제 없음</span></div>
+      <div class="subs">${gone.map(row).join('')}</div></section>` : ''}
+    ${hid.length ? `<section class="card"><div class="head"><span class="T" style="font-size:22px">구독 아님으로 뺀 것</span></div><div class="subs">${hid.map(row).join('')}</div></section>` : ''}
+    <p class="tiny" style="color:#3d3d3b;margin:4px 6px">이름이 알려진 서비스(Claude, ChatGPT, Netflix, 헬스장, 통신비 등)와 '구독'으로 분류한 결제, 매달 같은 금액이 나가는 결제를 모았어요. 빠진 게 있으면 수입·지출 탭에서 그 결제를 '구독'으로 바꿔 주세요.</p>
+  </div>`;
+}
+
 /* ================= TAB 4: 자산 계획 ================= */
 function viewPlan(){
   const cur = planCur, mode = 'ALL-' + cur, m = focusMonth();
@@ -939,9 +1049,9 @@ function viewPlan(){
   const ws = worthSeries(cur);
   const growth = ws.length >= 2 ? ws[ws.length-1].v - ws[0].v : 0;
   const perMonth = ws.length >= 2 ? growth / (ws.length - 1) : 0;
-  const liquid = h.bank + h.saving + h.cash;
+  const liquid = h.bank + h.saving + h.cash + h.ewallet;
   const efMonths = avg && avg.exp > 0 ? liquid / avg.exp : null;
-  const comp = [['입출금', h.bank], ['예적금', h.saving], ['현금', h.cash], ['주식', h.stock], ['기타 투자', h.invest]];
+  const comp = [['입출금', h.bank], ['예적금', h.saving], ['현금', h.cash], ['PayPal', h.ewallet], ['주식', h.stock], ['기타 투자', h.invest]];
   const maxComp = Math.max(1, ...comp.map(c => c[1]));
   const c = S.settings.calc; const monthly = c.monthly != null ? c.monthly : Math.max(0, Math.round(avg ? (avg.inc - avg.exp) : 0));
   const sim = simulate(h.stock + h.invest, monthly, c.rate, c.years);
@@ -1062,7 +1172,7 @@ function viewSettings(){
 }
 
 /* ================= render & events ================= */
-const VIEWS = {home:viewHome, flow:viewFlow, budget:viewBudget, plan:viewPlan, import:viewImport, settings:viewSettings};
+const VIEWS = {home:viewHome, flow:viewFlow, subs:viewSubs, budget:viewBudget, plan:viewPlan, import:viewImport, settings:viewSettings};
 function render(){
   if (!S.settings) return;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
@@ -1074,7 +1184,7 @@ function render(){
   wireTips(v);
   if (tab === 'import') wireImport();
 }
-function go(t){ tab = t; if (VIEWS[t] && ['home','flow','budget','plan'].includes(t)) lsSet('ntk-tab', t); render(); window.scrollTo(0, 0); }
+function go(t){ tab = t; if (VIEWS[t] && ['home','flow','subs','budget','plan'].includes(t)) lsSet('ntk-tab', t); render(); window.scrollTo(0, 0); }
 function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2400); }
 
 document.addEventListener('click', e => {
@@ -1104,6 +1214,7 @@ document.addEventListener('click', e => {
     persist('settings'); render(); toast('지웠어요');
   }
   else if (d.cancel) render();
+  else if (d.subhide){ const k = d.subhide; S.settings.subsHidden = Object.assign({}, S.settings.subsHidden); if (S.settings.subsHidden[k]) delete S.settings.subsHidden[k]; else S.settings.subsHidden[k] = true; persist('settings'); render(); }
   else if (d.goaldel){ S.settings.goals = S.settings.goals.filter(g => g.id !== d.goaldel); persist('settings'); render(); }
   else if (d.goalsave){ const g = S.settings.goals.find(x => x.id === d.goalsave); g.saved = parseFloat($('#gs-' + g.id).value) || 0; persist('settings'); render(); toast('저장했어요'); }
   else if (d.backup){
@@ -1322,7 +1433,7 @@ function commitImport(){
 }
 
 /* ================= boot ================= */
-const saved = lsGet('ntk-tab'); if (saved && ['home','flow','budget','plan'].includes(saved)) tab = saved;
+const saved = lsGet('ntk-tab'); if (saved && ['home','flow','subs','budget','plan'].includes(saved)) tab = saved;
 loadDemo(); render();
 initStore();
 probeEnc();
