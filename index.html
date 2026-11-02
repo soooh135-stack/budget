@@ -1048,7 +1048,8 @@ function viewSettings(){
       <p class="small ink2" style="margin-bottom:10px">데이터는 이 기기에만 저장돼요. 다른 기기로 옮기거나 혹시 모를 때를 대비해 가끔 백업 파일을 저장해 두세요.</p>
       <div class="row"><button class="btn primary" data-backup="1">백업 파일 저장</button>
         <label class="btn" for="restoreFile" style="cursor:pointer">백업 불러오기</label><input type="file" id="restoreFile" accept=".json,application/json" hidden></div>
-      <div id="restoreBox"></div></section>` : ''}
+      <div id="restoreBox"></div>
+      ${encAvailable ? `<p class="small ink2" style="margin-top:14px"><b>사이트에서 최신 데이터 받기</b> · Claude가 새로 정리해 올린 데이터로 바꿔요.</p>${encForm('settings')}` : ''}</section>` : ''}
     <section class="card"><h2 style="margin-bottom:10px">계좌 추가</h2>
       <form id="addAcct" class="row">
         <select id="naBank" aria-label="은행">${Object.entries(BANKS).map(([k, b]) => `<option value="${k}">${b.name}</option>`).join('')}</select>
@@ -1066,6 +1067,9 @@ function render(){
   if (!S.settings) return;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
   $('#demoBanner').hidden = !demo;
+  if (demo) $('#demoBanner').innerHTML = encAvailable
+    ? `<div style="width:100%"><b>내 데이터가 준비돼 있어요.</b> 비밀번호를 넣으면 이 기기에 들어와요.${encForm('banner')}</div>`
+    : `<span><b>예시 데이터예요.</b> 실제 숫자가 아니에요. 은행 파일을 가져오면 예시는 사라져요.</span><button class="btn sm primary" data-go="import">내 데이터 가져오기</button>`;
   const v = $('#view'); v.innerHTML = VIEWS[tab]();
   wireTips(v);
   if (tab === 'import') wireImport();
@@ -1160,6 +1164,11 @@ document.addEventListener('input', e => { if (e.target.id === 'fQ'){ clearTimeou
 
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
+  if (f.dataset.encform){ const id = f.dataset.encform, err = $('#encErr-' + id), btn = f.querySelector('button');
+    btn.disabled = true; btn.textContent = '여는 중…'; err.textContent = '';
+    loadEnc($('#encPass-' + id).value).then(n => { go('home'); toast(`내 데이터 ${n.toLocaleString()}건을 불러왔어요`); })
+      .catch(x => { btn.disabled = false; btn.textContent = '불러오기'; err.textContent = x && x.message === 'nofile' ? '사이트에 데이터가 없어요.' : '비밀번호가 맞지 않아요. 다시 넣어 주세요.'; });
+    return; }
   if (f.id === 'fxForm'){ const v = parseFloat($('#fxIn').value); if (!(v > 0)){ toast('숫자로 적어 주세요'); return; } S.settings.fx = v; S.settings.fxDate = today(); persist('settings'); render(); toast('환율을 바꿨어요'); }
   else if (f.id === 'addAcct'){ if (demo) leaveDemo(); S.settings.accounts.push({id: uid(), bank: $('#naBank').value, name: $('#naName').value.trim(), cur: $('#naCur').value, type: $('#naType').value, snaps: []}); persist('settings'); render(); toast('계좌를 추가했어요'); }
   else if (f.id === 'addGoal'){ const g = {id: uid(), name: $('#ngName').value.trim(), cur: $('#ngCur').value, target: parseFloat($('#ngTarget').value) || 0, due: $('#ngDue').value || null, acct: $('#ngAcct').value || null, saved: 0};
@@ -1182,6 +1191,31 @@ function recategorize(acctId){
     if (ch) persistMonth(m); }
   persist('settings'); render(); toast('분류를 다시 했어요');
 }
+/* ================= encrypted data on the site (standalone only) ================= */
+// The site can carry the owner's data as an AES-GCM blob (key = PBKDF2 of a passphrase only the owner has).
+let encAvailable = false;
+async function probeEnc(){
+  if (!STANDALONE) return;
+  try { const r = await fetch('data.enc', {cache: 'no-store'}); encAvailable = r.ok; } catch { encAvailable = false; }
+  render();
+}
+async function loadEnc(pass){
+  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const r = await fetch('data.enc', {cache: 'no-store'}); if (!r.ok) throw new Error('nofile');
+  const e = await r.json();
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass.trim()), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({name:'PBKDF2', salt: b64(e.salt), iterations: e.iter, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+  const plain = await crypto.subtle.decrypt({name:'AES-GCM', iv: b64(e.iv)}, key, b64(e.ct));
+  const d = JSON.parse(new TextDecoder().decode(plain));
+  demo = false;
+  S.settings = Object.assign(defaultSettings(), d.settings); S.months = d.months || {};
+  persist('settings'); Object.keys(S.months).forEach(persistMonth);
+  return Object.values(S.months).flat().length;
+}
+function encForm(id){
+  return `<form class="encform row" data-encform="${id}" style="margin-top:8px"><input type="password" id="encPass-${id}" placeholder="비밀번호" autocomplete="current-password" autocapitalize="off" spellcheck="false" style="flex:1;min-width:150px"><button class="btn primary">불러오기</button></form><p class="tiny neg" id="encErr-${id}"></p>`;
+}
+
 /* ================= import ================= */
 function wireImport(){
   const drop = $('#drop'); if (!drop) return;
@@ -1291,6 +1325,7 @@ function commitImport(){
 const saved = lsGet('ntk-tab'); if (saved && ['home','flow','budget','plan'].includes(saved)) tab = saved;
 loadDemo(); render();
 initStore();
+probeEnc();
 })();
 </script>
 
