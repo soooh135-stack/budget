@@ -1557,6 +1557,7 @@ function viewSettings(){
       <div class="row"><button class="btn primary" data-backup="1">백업 파일 저장</button>
         <label class="btn" for="restoreFile" style="cursor:pointer">백업 불러오기</label><input type="file" id="restoreFile" accept=".json,application/json" hidden></div>
       <div id="restoreBox"></div>
+      ${lsGet('ntk-prev') ? `<p class="small ink2" style="margin-top:14px"><b>${L('마지막 업데이트 되돌리기', 'Undo the last update')}</b> · ${L('최신 데이터를 받기 직전 상태로 돌아가요.', 'Go back to just before the last update.')} <button class="btn sm" data-undoupd="1">${L('되돌리기', 'Undo')}</button></p>` : ''}
       ${encAvailable ? `<p class="small ink2" style="margin-top:14px"><b>사이트에서 최신 데이터 받기</b> · Claude가 새로 정리해 올린 데이터로 바꿔요.</p>${encForm('settings')}` : ''}</section>` : ''}
     <section class="card"><h2 style="margin-bottom:10px">계좌 추가</h2>
       <form id="addAcct" class="row">
@@ -1576,7 +1577,7 @@ function render(){
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
   const newer = !demo && encAvailable && encSavedAt && encSavedAt > (S.settings.syncedAt || '');
   $('#demoBanner').hidden = !demo && !newer;
-  if (newer) $('#demoBanner').innerHTML = `<div style="width:100%"><b>${L('새 데이터가 있어요.', 'New data is available.')}</b> ${L('Claude가 정리해 올린 최신 데이터예요. 받으면 이 기기 데이터가 바뀌어요.', 'Claude uploaded an update. Getting it replaces the data on this device.')}
+  if (newer) $('#demoBanner').innerHTML = `<div style="width:100%"><b>${L('새 데이터가 있어요.', 'New data is available.')}</b> ${L('Claude가 정리해 올린 최신 데이터예요. 이 폰에서 추가·수정한 건 그대로 남아요.', 'Claude uploaded an update. Anything you added or edited on this phone is kept.')}
       ${lsGet('ntk-pass') ? `<div class="row" style="margin-top:8px"><button class="btn primary sm" data-encquick="1">${L('최신 데이터 받기', 'Get update')}</button></div><p class="tiny neg" id="encErr-quick"></p>` : encForm('banner')}</div>`;
   else if (demo) $('#demoBanner').innerHTML = encAvailable
     ? `<div style="width:100%"><b>내 데이터가 준비돼 있어요.</b> 비밀번호를 넣으면 이 기기에 들어와요.${encForm('banner')}</div>`
@@ -1594,6 +1595,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const d = b.dataset;
   if (d.lang){ lang = lang === 'en' ? 'ko' : 'en'; lsSet('ntk-lang', lang); if (lang === 'ko') location.reload(); else render(); return; }
+  if (d.undoupd){ try { const p = JSON.parse(lsGet('ntk-prev')); S.settings = Object.assign(defaultSettings(), p.settings); S.months = p.months || {}; persist('settings'); Object.keys(S.months).forEach(persistMonth); localStorage.removeItem('ntk-prev'); go('home'); toast(L('업데이트 전으로 되돌렸어요', 'Restored the previous data')); } catch { toast(L('되돌릴 데이터가 없어요', 'Nothing to undo')); } return; }
   if (d.encquick){ b.disabled = true; loadEnc(lsGet('ntk-pass') || '').then(n => { go('home'); toast(L(`최신 데이터 ${n.toLocaleString()}건을 받았어요`, `Updated: ${n.toLocaleString()} transactions`)); })
       .catch(() => { try { localStorage.removeItem('ntk-pass'); } catch {} render(); }); return; }
   if (d.ask){ askAI(d.ask); return; }
@@ -1628,7 +1630,7 @@ document.addEventListener('click', e => {
   else if (d.addopen){ addOpen = addOpen === d.addopen ? null : d.addopen; render(); }
   else if (d.txdel){ txDelAsk = d.txdel; render(); }
   else if (d.txdelno){ txDelAsk = null; render(); }
-  else if (d.txdelok){ for (const m in S.months){ const n = S.months[m].length; S.months[m] = S.months[m].filter(t => t.id !== d.txdelok); if (S.months[m].length !== n){ persistMonth(m); break; } } txDelAsk = null; render(); toast('지웠어요'); }
+  else if (d.txdelok){ S.settings.deletedTx = [...(S.settings.deletedTx || []), d.txdelok]; persist('settings'); for (const m in S.months){ const n = S.months[m].length; S.months[m] = S.months[m].filter(t => t.id !== d.txdelok); if (S.months[m].length !== n){ persistMonth(m); break; } } txDelAsk = null; render(); toast('지웠어요'); }
   else if (d.subhide){ const k = d.subhide; S.settings.subsHidden = Object.assign({}, S.settings.subsHidden); if (S.settings.subsHidden[k]) delete S.settings.subsHidden[k]; else S.settings.subsHidden[k] = true; persist('settings'); render(); }
   else if (d.goaldel){ S.settings.goals = S.settings.goals.filter(g => g.id !== d.goaldel); persist('settings'); render(); }
   else if (d.goalsave){ const g = S.settings.goals.find(x => x.id === d.goalsave); g.saved = parseFloat($('#gs-' + g.id).value) || 0; persist('settings'); render(); toast('저장했어요'); }
@@ -1733,6 +1735,38 @@ async function probeEnc(){
   try { const r = await fetch('data.enc', {cache: 'no-store'}); encAvailable = r.ok; if (r.ok){ const e = await r.json(); encSavedAt = e.savedAt || ''; } } catch { encAvailable = false; }
   render();
 }
+// Combine Claude's upload (base) with what was done on this device (local): local additions, edits,
+// deletions, balance records and personal settings survive an update.
+function mergeData(base, local){
+  const out = {settings: JSON.parse(JSON.stringify(base.settings || {})), months: JSON.parse(JSON.stringify(base.months || {}))};
+  const ls = local.settings || {}, os = out.settings;
+  const deleted = new Set([...(ls.deletedTx || []), ...(os.deletedTx || [])]);
+  const byId = {}; for (const m in out.months) for (const t of out.months[m]) byId[t.id] = t;
+  for (const m in local.months || {}) for (const t of local.months[m]){
+    if (deleted.has(t.id)) continue;
+    const b = byId[t.id];
+    if (!b){ if (t.manual) (out.months[m] ??= []).push(t); continue; }      // added on this device
+    if (t.userCat) { b.cat = t.cat; b.userCat = true; }                     // edited on this device
+    if (t.userAmt) { b.amt = t.amt; b.userAmt = true; }
+  }
+  for (const m in out.months) out.months[m] = out.months[m].filter(t => !deleted.has(t.id));
+  // accounts: keep local-only accounts; merge balance records by date (this device wins on the same day)
+  const accById = Object.fromEntries((os.accounts || []).map(a => [a.id, a]));
+  for (const a of ls.accounts || []){
+    const b = accById[a.id];
+    if (!b){ (os.accounts ||= []).push(a); continue; }
+    const snaps = {}; for (const s of b.snaps || []) snaps[s.date] = s; for (const s of a.snaps || []) snaps[s.date] = s;
+    b.snaps = Object.values(snaps).sort((x, y) => x.date < y.date ? -1 : 1);
+    if (a.defInc) b.defInc = a.defInc; if (a.defExp) b.defExp = a.defExp;
+  }
+  // personal settings made on the phone
+  for (const k of ['spendCap', 'budgets', 'todoDone', 'subsHidden', 'calc', 'budgetCur']) if (ls[k] != null && (typeof ls[k] !== 'object' || Object.keys(ls[k]).length)) os[k] = ls[k];
+  if ((ls.goals || []).length) os.goals = ls.goals;
+  os.catOverrides = Object.assign({}, os.catOverrides, ls.catOverrides);
+  if ((ls.fxDate || '') > (os.fxDate || '')){ os.fx = ls.fx; os.fxUsd = ls.fxUsd; os.fxDate = ls.fxDate; }
+  os.deletedTx = [...deleted];
+  return out;
+}
 async function loadEnc(pass){
   const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
   const r = await fetch('data.enc', {cache: 'no-store'}); if (!r.ok) throw new Error('nofile');
@@ -1741,8 +1775,11 @@ async function loadEnc(pass){
   const key = await crypto.subtle.deriveKey({name:'PBKDF2', salt: b64(e.salt), iterations: e.iter, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']);
   const plain = await crypto.subtle.decrypt({name:'AES-GCM', iv: b64(e.iv)}, key, b64(e.ct));
   const d = JSON.parse(new TextDecoder().decode(plain));
+  const hadData = !demo && S.settings && Object.values(S.months).some(a => a.length);
+  if (hadData) lsSet('ntk-prev', JSON.stringify({savedAt: new Date().toISOString(), settings: S.settings, months: S.months}));   // one-step undo
+  const merged = hadData ? mergeData(d, {settings: S.settings, months: S.months}) : d;
   demo = false;
-  S.settings = Object.assign(defaultSettings(), d.settings); S.months = d.months || {};
+  S.settings = Object.assign(defaultSettings(), merged.settings); S.months = merged.months || {};
   S.settings.syncedAt = e.savedAt || new Date().toISOString();
   migrateData();
   lsSet('ntk-pass', pass.trim());   // this device already holds the decrypted data, so remembering the key here adds nothing new
