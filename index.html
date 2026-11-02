@@ -264,6 +264,37 @@ nav.tabs button{font-size:12px;padding:12px 0}
 .bubble.assistant{align-self:flex-start;background:#fff;border-bottom-left-radius:6px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chips .tag{background:rgba(255,255,255,.6);font-size:12.5px}
+
+.capcard .capnum{font-size:34px;font-weight:700;letter-spacing:-.04em;margin-top:6px}
+.capcard .capnum span{font-size:16px;font-weight:700;color:var(--ink2)}
+.capbar{position:relative;height:16px;border:1.5px solid var(--ink);border-radius:999px;background:#fff;margin:10px 0 8px;overflow:visible}
+.capbar i{display:block;height:100%;background:var(--ink);border-radius:999px}
+.capbar i.over{background:var(--bad)}
+.capbar b{position:absolute;top:-5px;bottom:-5px;width:2.5px;background:var(--bad);border-radius:2px}
+.capedit{margin-top:10px}
+.capedit input{min-height:34px;padding:4px 12px}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.quick .btn{background:#fff}
+.quick .btn.primary{background:var(--ink)}
+.capcard .addform{margin:10px 0 0}
+.goalrow{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:14px 0;border-top:1.5px dashed #d6d3cb;align-items:start}
+.goalrow:first-child{border-top:0;padding-top:4px}
+.goalrow input{appearance:none;-webkit-appearance:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);margin:0;display:grid;place-items:center;background:transparent;cursor:pointer}
+.goalrow input:checked{background:var(--sage)}
+.goalrow input:checked::after{content:"";width:7px;height:12px;border:solid var(--ink);border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+.gbody{background:none;border:0;padding:0;text-align:left;font:inherit;color:inherit;width:100%}
+.gbody .t{font-weight:800;font-size:15px}
+.gbody .d{font-size:12.5px;color:var(--ink2);margin-top:3px;line-height:1.5}
+.gbody .tag{font-size:10.5px;padding:1px 8px;margin-left:6px;border-width:1.2px;vertical-align:2px}
+.gbody .caret{font-style:normal;font-size:11px;margin-left:6px}
+.goalrow.done .t{text-decoration:line-through;opacity:.55}
+.gdetail{margin:-4px 0 12px 38px;padding:8px 12px}
+.gdetail .li{padding:8px 0}
+.split2{display:grid;grid-template-columns:1fr;gap:12px}
+.split2 h3{margin-bottom:2px}
+.grouphead{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 8px}
+.grouphead:first-child{margin-top:0}
+.hbar .fill.bizfill{background:#5B5BD6}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -317,7 +348,9 @@ const CATS = [
   {c:'학비',         k:'expense', need:'needs', hint:'등록금·교재'},
   {c:'교통',         k:'expense', need:'needs'},
   {c:'건강',         k:'expense', need:'needs'},
-  {c:'사업비',       k:'expense', need:'needs', hint:'재료·작업실·광고'},
+  {c:'사업비',       k:'expense', need:'biz', hint:'재료·작업실'},
+  {c:'광고비',       k:'expense', need:'biz', hint:'메타·인스타 광고'},
+  {c:'출장',         k:'expense', need:'biz', hint:'일 때문에 간 여행'},
   {c:'세금·수수료',  k:'expense', need:'needs'},
   {c:'음식',         k:'expense', need:'wants', hint:'외식·카페·배달'},
   {c:'친구 약속',    k:'expense', need:'wants'},
@@ -338,7 +371,8 @@ const RULES = [
   [/transfer (to|from) xx\d{3,4}|해외송금|wirebarley|wise\b|transfer to kb|transfer to (my|own)|내계좌|본인|to savings|netbank saver|goal saver|모으기/i,'내 계좌 이체'],
   [/cash deposit|atm\s*입금|무통장입금/i,'현금 수입'],
   [/tfn withholding|international transaction fee|\bfee\b|수수료|tax\b/i,'세금·수수료'],
-  [/tattoo|iworld|kaya\s*emporium|kayaemporium|facebk|facebook|metaplatfor|meta ads|instagram ads/i,'사업비'],
+  [/facebk|facebook|metaplatfor|meta ads|meta platforms|instagram ads/i,'광고비'],
+  [/tattoo|iworld|kaya\s*emporium|kayaemporium/i,'사업비'],
   [/real estate|rent\b|월세/i,'주거·공과금'],
   [/salary|payroll|wage|급여|월급|상여|pay from/i,'급여'],
   [/용돈|엄마|아빠|부모|family support/i,'용돈·지원'],
@@ -349,7 +383,7 @@ const RULES = [
   [/opal|transport|translink|myki|didi|grab|uber(?!\s*eats)|shell|bp |ampol|parking|티머니|택시|주유|교통/i,'교통'],
   [/pharmacy|medical|dental|bupa|medibank|ahm|nib|약국|병원|의원|치과/i,'건강'],
   [/cafe|coffee|mcdonald|kfc|hungry|uber\s*eats|doordash|menulog|restaurant|sushi|pizza|ramen|bakery|bake|brew|hotpot|thai|matcha|heytea|chatime|gong cha|boost juice|subway|grill|bistro|kitchen|eatery|osteria|trattoria|izakaya|dumpling|noodle|bbq|surasang|스타벅스|카페|배달의민족|배민|요기요|쿠팡이츠|식당|치킨|베이커리/i,'음식'],
-  [/qantas|jetstar|virgin|airbnb|booking|edreams|트립닷컴|trip\.com|아고다|야놀자|여기어때|대한항공|아시아나|진에어|제주항공|티웨이|에어부산|agoda|hotel|expedia|항공|호텔|숙박/i,'여행'],
+  [/qantas|jetstar|virgin|airbnb|booking|edreams|트립닷컴|trip\.com|아고다|야놀자|여기어때|대한항공|아시아나|진에어|제주항공|티웨이|에어부산|agoda|hotel|expedia|항공|호텔|숙박/i,'출장'],
   [/cinema|hoyts|event cinema|gym|fitness|derrimut|sanctuary|zoo|massage|steam|playstation|nintendo|ticketek|concert|영화|헬스|공연|cgv/i,'취미'],
   [/netflix|spotify|youtube|apple\.com|icloud|disney|chatgpt|openai|anthropic|claude|notion|google storage|구독|멜론|왓챠|티빙/i,'구독'],
   [/kmart|target|big w|jb hi-fi|amazon|ebay|temu|shein|uniqlo|zara|쿠팡|무신사|올리브영|29cm|shopping|mecca|sephora|h&m/i,'쇼핑'],
@@ -396,7 +430,7 @@ const DICT = {
   // categories
   '급여':'Salary', '사업 수입':'Business income', '현금 수입':'Cash income', '용돈·지원':'Allowance & support', '이자·환급':'Interest & refunds', '기타수입':'Other income',
   '생활비':'Living costs', '주거·공과금':'Housing & bills', '학비':'Tuition', '교통':'Transport', '건강':'Health', '사업비':'Business costs', '세금·수수료':'Tax & fees',
-  '음식':'Food', '친구 약속':'Friends', '데이트':'Dates', '여행':'Travel', '취미':'Hobbies', '쇼핑':'Shopping', '송금·선물':'Transfers & gifts', '기타지출':'Other spending', '투자':'Investing', '내 계좌 이체':'Own-account transfer',
+  '음식':'Food', '친구 약속':'Friends', '데이트':'Dates', '여행':'Travel', '취미':'Hobbies', '쇼핑':'Shopping', '송금·선물':'Transfers & gifts', '기타지출':'Other spending', '투자':'Investing', '내 계좌 이체':'Own-account transfer', '광고비':'Advertising', '출장':'Business travel', '생활 지출':'Personal', '사업 지출':'Business',
   // account types & banks
   '입출금':'Everyday', '예적금':'Savings', '현금':'Cash', 'PayPal·전자지갑':'PayPal / e-wallet', '주식':'Stocks', '기타 투자':'Other investments', '은행':'Bank',
   '국민 입출금':'KB Everyday', '토스뱅크 통장':'Toss Bank', '호주 현금':'Cash (AUD)', '한국 현금 (비상금)':'Cash (KRW, emergency)', '현금 (AUD)':'Cash (AUD)', 'KB국민':'KB Kookmin', '토스뱅크':'Toss Bank', '토스증권':'Toss Securities',
@@ -533,7 +567,7 @@ function categorize(desc, amt, acctId){
   const who = String(desc || '').split(' · ')[0].trim().split(/\s+/);
   if ((S.settings.ownerNames || []).some(n => who.includes(n))) return '내 계좌 이체';
   if (key && ov[key] && CAT[ov[key]]) return ov[key];
-  for (const [re, c] of RULES) if (re.test(desc)) return amt > 0 && c === '사업비' ? '사업 수입' : c;
+  for (const [re, c] of RULES) if (re.test(desc)) return amt > 0 && (CAT[c] || {}).need === 'biz' ? '사업 수입' : c;
   const a = acctId ? acctById(acctId) : null;
   if (a && amt > 0 && a.defInc) return a.defInc;
   if (a && amt < 0 && a.defExp) return a.defExp;
@@ -579,14 +613,14 @@ function focusMonth(){ const ms = monthsWithData(); const cm = thisMonth(); retu
 // flow for a month. mode: 'AUD' | 'KRW' (that currency's accounts only) | 'ALL-AUD' | 'ALL-KRW'
 function flow(m, mode){
   const cur = mode.length === 3 ? mode : mode.slice(4);
-  const f = {cur, inc:0, incBank:0, incCash:0, exp:0, inv:0, cats:{}, incCats:{}, n:0};
+  const f = {cur, inc:0, incBank:0, incCash:0, exp:0, biz:0, inv:0, cats:{}, incCats:{}, n:0};
   for (const t of S.months[m] || []){
     const a = acctById(t.acct); if (!a) continue;
     if (mode.length === 3 && a.cur !== mode) continue;
     const kind = (CAT[t.cat] || {}).k || (t.amt > 0 ? 'income' : 'expense');
     const v = conv(t.amt, a.cur, cur);
     if (kind === 'income'){ f.inc += v; if (a.type === 'cash' || t.cat === '현금 수입') f.incCash += v; else f.incBank += v; f.incCats[t.cat] = (f.incCats[t.cat]||0) + v; }
-    else if (kind === 'expense'){ f.exp -= v; f.cats[t.cat] = (f.cats[t.cat]||0) - v; f.n++; }
+    else if (kind === 'expense'){ f.exp -= v; f.cats[t.cat] = (f.cats[t.cat]||0) - v; f.n++; if ((CAT[t.cat] || {}).need === 'biz') f.biz -= v; }
     else if (kind === 'invest') f.inv -= v;
   }
   return f;
@@ -596,8 +630,8 @@ function avgFlow(endMonth, n, mode){
   const ms = monthsWithData().filter(m => m < endMonth).slice(-n);
   if (!ms.length) return null;
   const fs = ms.map(m => flow(m, mode));
-  const avg = {inc:0, exp:0, inv:0, cats:{}, months: ms.length};
-  for (const f of fs){ avg.inc += f.inc/fs.length; avg.exp += f.exp/fs.length; avg.inv += f.inv/fs.length; for (const c in f.cats) avg.cats[c] = (avg.cats[c]||0) + f.cats[c]/fs.length; }
+  const avg = {inc:0, exp:0, biz:0, inv:0, cats:{}, months: ms.length};
+  for (const f of fs){ avg.inc += f.inc/fs.length; avg.exp += f.exp/fs.length; avg.biz += f.biz/fs.length; avg.inv += f.inv/fs.length; for (const c in f.cats) avg.cats[c] = (avg.cats[c]||0) + f.cats[c]/fs.length; }
   return avg;
 }
 function holdings(cur){
@@ -678,51 +712,81 @@ function subsAll(cur){
 }
 
 /* ================= recommendations (this month's goals) ================= */
+const cashAcct = () => S.settings.accounts.find(a => a.type === 'cash' && a.cur === 'AUD') || S.settings.accounts.find(a => a.type === 'cash');
+// typical monthly living costs: median of the last 6 finished months, so a one-off (e.g. a car gift) doesn't skew it
+function typicalPersonal(cur){
+  const ms = monthsWithData().filter(x => x < thisMonth()).slice(-6); if (!ms.length) return null;
+  const v = ms.map(x => { const f = flow(x, 'ALL-' + cur); return f.exp - f.biz; }).sort((a, b) => a - b);
+  return v.length % 2 ? v[v.length >> 1] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
+}
+const roundCap = (v, cur) => Math.round(v / (cur === 'AUD' ? 100 : 100000)) * (cur === 'AUD' ? 100 : 100000);
+function spendCap(cur){ const c = S.settings.spendCap; return c ? conv(c, 'AUD', cur) : null; }
 function recommendations(){
   const cur = homeCur, mode = 'ALL-' + cur, m = homeMonth();
-  const f = flow(m, mode), avg = avgFlow(m, 3, mode), h = holdings(cur);
-  const recs = [], tagT = {저축:'Save', 안전:'Safety', 지출:'Spend', 구독:'Subs', 투자:'Invest', 환율:'FX', 시작:'Start'};
-  const push = (id, t, d, tag) => recs.push({id, t, d, tag: L(tag, tagT[tag] || tag)});
+  const f = flow(m, mode), avg = avgFlow(m, 6, mode), h = holdings(cur);
+  const recs = [], tagT = {저축:'Save', 안전:'Safety', 지출:'Spend', 구독:'Subs', 투자:'Invest', 환율:'FX', 시작:'Start', 현금:'Cash', 세금:'Tax'};
+  const push = (id, t, d, tag, more) => recs.push({id, t, d, tag: L(tag, tagT[tag] || tag), more});
   const cn = c => lang === 'en' ? (DICT[c] || c) : c;
-  const baseInc = avg && avg.inc > 0 ? avg.inc : f.inc;
-  const baseExp = avg && avg.exp > 0 ? avg.exp : f.exp;
-  if (baseInc > 0){
-    const rate = (baseInc - baseExp) / baseInc * 100;
-    if (rate < 20){ const cut = baseExp - baseInc * 0.8;
-      push('save20', L('저축률 20% 만들기', 'Get to a 20% savings rate'),
-        L(`최근 평균 저축률이 ${rate.toFixed(0)}%예요. 이번 달 지출을 ${fm(baseExp - cut, cur)} 안으로 맞추면 (${fm(cut, cur)} 줄이기) 20%가 돼요.`,
-          `Your recent savings rate is ${rate.toFixed(0)}%. Keep this month's spending under ${fm(baseExp - cut, cur)} (cut ${fm(cut, cur)}) to reach 20%.`), '저축');
-    } else push('payfirst', L(`월급날 ${fm(baseInc * 0.1, cur)} 먼저 떼어 두기`, `Set aside ${fm(baseInc * 0.1, cur)} on payday`),
-        L(`저축률이 ${rate.toFixed(0)}%로 좋아요. 남는 돈이 아니라 들어오는 날 바로 소득의 10%를 투자·저축 통장으로 옮기면 더 빨리 모여요.`,
-          `A ${rate.toFixed(0)}% savings rate is solid. Move 10% of income to savings or investments the day it arrives, not whatever is left over.`), '저축');
+  const li = (a, b) => `<div class="li"><span>${a}</span><b class="num">${b}</b></div>`;
+  const personal = f.exp - f.biz, avgPersonal = typicalPersonal(cur) || personal;
+  // 1. the user's own goal: spend less on living costs
+  if (avgPersonal > 0){
+    const target = roundCap(avgPersonal * 0.85, cur);
+    const cap = spendCap(cur) || target;
+    const wants = EXP_CATS.filter(c => CAT[c].need === 'wants').map(c => [c, avg ? (avg.cats[c] || 0) : 0]).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    push('cut', L(`생활비 ${fm(cap, cur)} 안으로`, `Keep living costs under ${fm(cap, cur)}`),
+      L(`보통 달 생활비(사업비 빼고)가 ${fm(avgPersonal, cur)}예요. ${S.settings.spendCap ? '정한 한도' : '15% 줄인 금액'} ${fm(cap, cur)}를 이번 달 상한으로 잡아요.`,
+        `A typical month's living costs (excluding business) are ${fm(avgPersonal, cur)}. Cap this month at ${fm(cap, cur)}${S.settings.spendCap ? '' : ' (15% less)'}.`), '지출',
+      () => `<p class="small ink2">${L('줄이기 쉬운 곳 (선택 지출 평균)', 'Easiest places to cut (average optional spending)')}</p><div class="list">${wants.map(([c, v]) => li(cn(c), `${fm(v, cur)} → ${fm(v * .8, cur)}`)).join('')}</div>
+        <p class="tiny ink2" style="margin-top:6px">${L('각각 20%씩만 줄여도', 'Cutting each by 20% saves')} <b>${fm(wants.reduce((s, [, v]) => s + v * .2, 0), cur)}</b>${L('/월 아껴요.', '/month.')}</p>`);
   }
-  const liquid = h.bank + h.saving + h.cash + h.ewallet;
-  if (baseExp > 0){ const months = liquid / baseExp;
-    if (months < 3) push('emerg', L('비상금 3개월치 채우기', 'Build a 3-month emergency fund'),
-      L(`지금 바로 쓸 수 있는 돈은 생활비 ${months.toFixed(1)}개월치예요. ${fm(baseExp*3 - liquid, cur)} 더 있으면 3개월치가 돼요.`, `Your ready cash covers ${months.toFixed(1)} months of costs. ${fm(baseExp*3 - liquid, cur)} more gets you to 3 months.`), '안전'); }
+  // 2. cash income: record it the day it comes in
+  const ca = cashAcct();
+  if (ca){
+    const cashIn = monthTx(m, mode, 'income').filter(t => { const a = acctById(t.acct); return a.type === 'cash' || t.cat === '현금 수입'; });
+    const cashSum = cashIn.reduce((s, t) => s + conv(t.amt, acctById(t.acct).cur, cur), 0);
+    push('cashlog', L('현금은 받은 날 바로 기록하기', 'Log cash on the day you get it'),
+      L(`${monthLong(m)}에 기록된 현금 수입은 ${fm(cashSum, cur)}예요. 손님한테 현금 받으면 홈의 '+ 현금 받음'으로 바로 적고, 일주일에 한 번 은행에 넣어 두세요.`,
+        `Cash income recorded in ${monthLong(m)}: ${fm(cashSum, cur)}. Tap '+ Cash in' on Home when a client pays in cash, and bank it once a week.`), '현금',
+      () => `<div class="list">${li(L('지금 들고 있는 현금', 'Cash on hand'), fm(conv(currentBalance(ca), ca.cur, cur), cur))}${li(L(`${monthLong(m)} 현금 수입`, `${monthLong(m)} cash in`), fm(cashSum, cur))}</div>
+        <p class="tiny ink2" style="margin-top:6px">${L('현금이 많이 쌓이면 잃어버리거나 쉽게 써요. 비상금으로 쓸 만큼만 남기고 이자 받는 저축 통장에 넣는 게 좋아요.', 'Large piles of cash get lost or spent. Keep what you need and move the rest to an interest-earning savings account.')}</p>
+        <div class="row" style="margin-top:8px"><button class="btn sm primary" data-homeadd="cashin">${L('+ 현금 받음', '+ Cash in')}</button></div>`);
+  }
+  // 3. tax: set aside part of business profit
+  const bizIn = (f.incCats['사업 수입'] || 0) + (f.incCats['현금 수입'] || 0), profit = bizIn - f.biz;
+  if (profit > 0) push('tax', L(`세금용으로 ${fm(profit * .25, cur)} 떼어 두기`, `Set aside ${fm(profit * .25, cur)} for tax`),
+    L(`${monthLong(m)} 사업 이익(사업·현금 수입 − 사업비)이 ${fm(profit, cur)}예요. 현금 수입도 세금 신고 대상이라, 이익의 약 25%를 따로 모아 두면 신고 때 당황하지 않아요.`,
+      `${monthLong(m)} business profit (business + cash income − business costs) was ${fm(profit, cur)}. Cash income is taxable too — parking ~25% of profit avoids a surprise at tax time.`), '세금',
+    () => `<div class="list">${li(L('사업·현금 수입', 'Business + cash income'), fm(bizIn, cur))}${li(L('사업비 (재료·광고·출장)', 'Business costs (supplies, ads, travel)'), '−' + fm(f.biz, cur))}${li(L('이익', 'Profit'), fm(profit, cur))}${li(L('세금용 25%', 'Tax 25%'), fm(profit * .25, cur))}</div>
+      <p class="tiny ink2" style="margin-top:6px">${L('정확한 세율은 회계사와 확인하세요. 사업비 영수증(재료·광고·출장)을 모아 두면 공제받을 수 있어요.', 'Confirm your actual rate with an accountant. Keep receipts for supplies, ads and travel — they\'re deductible.')}</p>`);
+  // 4. subscriptions
+  const subs = subsAll(cur).filter(s => s.active && !s.hidden);
+  if (subs.length){ const tot = subs.reduce((s, x) => s + x.monthly, 0);
+    push('subs', L(`구독 ${subs.length}개 점검하기`, `Review ${subs.length} subscriptions`),
+      L(`매달 약 ${fm(tot, cur)}, 1년 ${fm(tot * 12, cur)}가 나가요. 지난달 안 쓴 건 해지하세요.`, `About ${fm(tot, cur)} a month (${fm(tot * 12, cur)} a year). Cancel what you didn't use last month.`), '구독',
+      () => `<div class="list">${subs.map(s => li(`${esc(cn(s.name))} <span class="chip">${esc(cn(s.tag))}</span>`, fm(s.monthly, cur) + L('/월', '/mo'))).join('')}</div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" data-tab="subs">${L('구독 탭에서 보기 ↗', 'Open Subscriptions ↗')}</button></div>`); }
+  // 5. a flexible category that jumped
   if (avg){ let worst = null;
     for (const c of EXP_CATS.filter(c => CAT[c].need === 'wants')){ const now = f.cats[c] || 0, was = avg.cats[c] || 0;
-      const day = +today().slice(8); const proj = m === thisMonth() && day >= 10 ? now / day * daysIn(m) : now;
-      if (was > 0 && proj > was * 1.25 && proj - was > (cur === 'AUD' ? 40 : 40000) && (!worst || proj - was > worst.diff)) worst = {c, was, proj, diff: proj - was}; }
-    if (worst){ const p = Math.round((worst.proj/worst.was - 1)*100);
+      if (was > 0 && now > was * 1.25 && now - was > (cur === 'AUD' ? 40 : 40000) && (!worst || now - was > worst.diff)) worst = {c, was, now, diff: now - was}; }
+    if (worst){ const p = Math.round((worst.now / worst.was - 1) * 100);
       push('cat-' + worst.c, L(`${worst.c} ${fm(worst.was, cur)} 안으로`, `Keep ${cn(worst.c)} under ${fm(worst.was, cur)}`),
-        L(`이번 달 ${worst.c} 지출이 이대로면 ${fm(worst.proj, cur)}로, 평소보다 ${p}% 많아요. 평소 수준으로 돌리는 게 이번 달 목표예요.`,
-          `${cn(worst.c)} is heading for ${fm(worst.proj, cur)}, ${p}% above usual. Bringing it back to normal is this month's goal.`), '지출'); } }
-  const social = (f.cats['친구 약속']||0) + (f.cats['데이트']||0) + (f.cats['음식']||0);
-  if (f.exp > 0 && social / f.exp > 0.3) push('social', L('약속·외식 예산 정하기', 'Set a budget for eating out'),
-    L(`음식·친구 약속·데이트가 지출의 ${Math.round(social/f.exp*100)}%예요. 한 달 상한(예: ${fm(social*0.8, cur)})을 정하고 '예산 진단' 탭에 적어 두세요.`,
-      `Food, friends and dates are ${Math.round(social/f.exp*100)}% of spending. Pick a monthly cap (e.g. ${fm(social*0.8, cur)}) and set it in Budget check.`), '지출');
-  const subs = subsAll(cur).filter(s => s.active && !s.hidden);
-  if (subs.length){ const tot = fm(subs.reduce((s, x) => s + x.monthly, 0), cur), names = subs.slice(0,3).map(s => esc(s.name)).join(', ');
-    push('subs', L(`구독 ${subs.length}개 점검하기`, `Review ${subs.length} subscriptions`),
-      L(`매달 약 ${tot}가 나가요. 한 달 동안 안 쓴 게 있으면 해지하세요. (${names})`, `About ${tot} goes out every month. Cancel anything you didn't use last month. (${names})`), '구독'); }
-  if (baseInc > 0 && f.inv < baseInc * 0.05) push('invest', L(`이번 달 투자 ${fm(baseInc*0.1, cur)} 넣기`, `Invest ${fm(baseInc*0.1, cur)} this month`),
-    L('ETF처럼 분산된 상품에 매달 같은 날 같은 금액을 넣는 게 가장 오래가는 방법이에요.', 'Putting the same amount into a diversified ETF on the same day each month is the habit that lasts.'), '투자');
-  if (h.krw > 0 && h.aud > 0) push('fx', L('환율 기록 업데이트', 'Update the exchange rate'),
-    L(`지금 앱 환율은 1 AUD = ₩${S.settings.fx.toLocaleString('ko-KR')} (${S.settings.fxDate})예요. 한국으로 보낼 땐 환율이 좋을 때 한 번에, 수수료 낮은 송금(Wise 등)으로 보내세요.`,
-      `The app uses 1 AUD = ₩${S.settings.fx.toLocaleString('ko-KR')} (${S.settings.fxDate}). When sending money to Korea, send in one go when the rate is good, through a low-fee service like Wise.`), '환율');
+        L(`${monthLong(m)} ${worst.c} 지출이 ${fm(worst.now, cur)}로 평소보다 ${p}% 많았어요.`, `${cn(worst.c)} was ${fm(worst.now, cur)} in ${monthLong(m)}, ${p}% above usual.`), '지출',
+        () => catDetail(m, mode, 'expense', worst.c)); } }
+  // 6. emergency fund / investing
+  const liquid = h.bank + h.saving + h.cash + h.ewallet;
+  if (avg && avg.exp > 0){ const mo = liquid / avg.exp;
+    if (mo < 3) push('emerg', L('비상금 3개월치 채우기', 'Build a 3-month emergency fund'), L(`바로 쓸 수 있는 돈이 ${mo.toFixed(1)}개월치예요.`, `Ready money covers ${mo.toFixed(1)} months.`), '안전',
+      () => `<div class="list">${li(L('은행', 'Bank'), fm(h.bank + h.saving, cur))}${li(L('현금', 'Cash'), fm(h.cash, cur))}${li('PayPal', fm(h.ewallet, cur))}</div>`);
+    else if (mo > 9 && (h.stock + h.invest) / (h.total || 1) < .2) push('invest', L(`남는 돈 ${fm(liquid - avg.exp * 6, cur)} 굴리기`, `Put ${fm(liquid - avg.exp * 6, cur)} of idle money to work`),
+      L(`비상금 6개월치를 빼도 ${fm(liquid - avg.exp * 6, cur)}가 은행·현금에 그냥 있어요. 투자는 재산의 ${Math.round((h.stock + h.invest) / (h.total || 1) * 100)}%뿐이에요.`,
+        `Even after a 6-month emergency fund, ${fm(liquid - avg.exp * 6, cur)} sits idle. Investments are only ${Math.round((h.stock + h.invest) / (h.total || 1) * 100)}% of your wealth.`), '투자',
+      () => `<div class="list">${li(L('비상금 6개월치', '6-month emergency fund'), fm(avg.exp * 6, cur))}${li(L('은행·현금·PayPal', 'Bank, cash, PayPal'), fm(liquid, cur))}${li(L('주식·투자', 'Investments'), fm(h.stock + h.invest, cur))}</div>
+        <p class="tiny ink2" style="margin-top:6px">${L('예: 고이자 저축 통장에 일부, 지수 ETF에 매달 같은 금액씩 나눠서. 큰돈을 한 번에 넣기보다 몇 달에 나눠 넣는 게 마음이 편해요.', 'e.g. some in high-interest savings, the rest into an index ETF in equal monthly amounts rather than all at once.')}</p>`);
+  }
   if (!recs.length) push('start', L('거래내역 2개월치 넣기', 'Add two months of transactions'), L('두 달 이상 쌓이면 이번 달 목표를 구체적으로 추천해 줄 수 있어요.', 'With two months of data the app can suggest specific goals.'), '시작');
-  return recs.slice(0, 5);
+  return recs.slice(0, 6);
 }
 
 /* ================= persistence ================= */
@@ -767,6 +831,18 @@ async function initStore(){
     setSync('이 기기에만 저장 중');
   }
 }
+// one-time fixes to stored data (idempotent): travel -> 출장, Meta/Facebook -> 광고비
+function migrateData(){
+  if (!S.settings || S.settings.migr >= 2) return;
+  for (const m in S.months){ let ch = false;
+    for (const t of S.months[m]){
+      if (t.cat === '여행'){ t.cat = '출장'; ch = true; }
+      if (t.amt < 0 && /facebk|facebook|metaplatfor|meta ads|meta platforms/i.test(t.desc) && t.cat !== '광고비'){ t.cat = '광고비'; ch = true; }
+    }
+    if (ch) persistMonth(m); }
+  for (const k in S.settings.catOverrides || {}) if (S.settings.catOverrides[k] === '여행') S.settings.catOverrides[k] = '출장';
+  S.settings.migr = 2; persist('settings');
+}
 let lastLoaded = '';
 function applyLoaded(settings, months){
   if (!settings && !Object.values(months).some(a => a.length)){ if (!demo) loadDemo(); render(); return; }
@@ -775,6 +851,7 @@ function applyLoaded(settings, months){
   if (!demo && (sig === lastLoaded || sig === JSON.stringify(S))){ lastLoaded = sig; return; }
   lastLoaded = sig; demo = false;
   S.settings = next.settings; S.months = months;
+  migrateData();
   render();
 }
 function leaveDemo(){ if (!demo) return; demo = false; S.settings = defaultSettings(); S.months = {}; }
@@ -938,6 +1015,7 @@ function stage(kind){
 /* ================= money coach (free, on-device: answers are computed from the user's own numbers) ================= */
 const chat = {msgs: []};
 const COACH_TOPICS = [
+  {id:'cash',  re:/현금|세금|cash|tax/i,                              ko:'현금 관리 어떻게 해?',    en:'How should I manage cash?'},
   {id:'earn',  re:/벌|수입|소득|매출|income|earn|making/i,           ko:'나 돈 잘 벌고 있어?',     en:'How well am I earning?'},
   {id:'save',  re:/아끼|아낄|아껴|절약|줄이|줄일|낭비|save|cut|waste/i,              ko:'어디서 더 아낄 수 있어?', en:'Where can I save more?'},
   {id:'month', re:/이번 ?달|지난 ?달|썼|지출|spent|spend|month/i,      ko:'이번 달 어디에 많이 썼어?', en:'Where did my money go this month?'},
@@ -952,6 +1030,21 @@ function coachAnswer(q){
   const ms = monthsWithData().filter(x => x <= m).slice(-7, -1), fs = ms.map(x => flow(x, mode));
   const B = s => `**${s}**`, cn = c => lang === 'en' ? (DICT[c] || c) : c;
   if (!t) return L(`이런 걸 물어볼 수 있어요:\n${COACH_TOPICS.map(x => '- ' + x.ko).join('\n')}`, `Here's what I can answer:\n${COACH_TOPICS.map(x => '- ' + x.en).join('\n')}`);
+  if (t.id === 'cash'){
+    const ca = cashAcct(), last3 = monthsWithData().filter(x => x <= m).slice(-3);
+    const cashIn = last3.reduce((s, x) => s + monthTx(x, mode, 'income').filter(t => { const a = acctById(t.acct); return a.type === 'cash' || t.cat === '현금 수입'; }).reduce((a, t) => a + conv(t.amt, acctById(t.acct).cur, cur), 0), 0) / Math.max(1, last3.length);
+    const bizIn = (f.incCats['사업 수입'] || 0) + (f.incCats['현금 수입'] || 0), profit = bizIn - f.biz;
+    return L(`현금 수입은 최근 3개월 기록 기준 한 달 평균 ${B(fm(cashIn, cur))}이고, 지금 들고 있는 현금은 ${B(ca ? fm(conv(currentBalance(ca), ca.cur, cur), cur) : '—')}이에요.
+- ${B('받은 날 바로 기록')}: 홈의 '+ 현금 받음'을 누르면 2초면 돼요. 기록이 빠지면 번 돈이 실제보다 작게 보여요.
+- ${B('일주일에 한 번 은행에 입금')}: 현금이 쌓이면 잃어버리거나 쉽게 써요. 입금하면 '현금 수입'으로 자동 분류돼요.
+- ${B('세금 통장 따로')}: ${monthLong(m)} 사업 이익은 ${fm(profit, cur)}예요. 이익의 약 25%(${fm(Math.max(0, profit) * .25, cur)})를 세금용 저축 통장에 바로 옮겨 두세요. 현금 수입도 신고 대상이에요.
+- ${B('생활비 한도')}: 홈의 생활비 카드에서 한도를 정하면, 남은 날 동안 하루 얼마 쓸 수 있는지 보여줘요.`,
+`From the last 3 months of records, cash income averages ${B(fm(cashIn, cur))} a month, and you're holding ${B(ca ? fm(conv(currentBalance(ca), ca.cur, cur), cur) : '—')} in cash.
+- ${B('Log it the same day')}: '+ Cash in' on Home takes two seconds. Missed entries make your income look smaller than it is.
+- ${B('Bank it weekly')}: piles of cash get lost or spent. Deposits are auto-tagged as cash income.
+- ${B('Separate tax account')}: ${monthLong(m)} business profit was ${fm(profit, cur)}. Move ~25% (${fm(Math.max(0, profit) * .25, cur)}) to a tax savings account — cash income is taxable too.
+- ${B('Spending cap')}: set one on the Home living-costs card to see a daily allowance.`);
+  }
   if (t.id === 'earn'){
     if (!avg) return L('비교할 지난 기록이 아직 부족해요. 두 달 이상 쌓이면 알려줄게요.', 'Not enough history yet — ask again after two months of data.');
     const diff = pct(f.inc - avg.inc, avg.inc) || 0, best = fs.length ? ms[fs.reduce((bi, x, i, a) => x.inc > a[bi].inc ? i : bi, 0)] : null;
@@ -1020,7 +1113,7 @@ function mdLite(s){
   return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^\s*-\s+/gm, '• ').replace(/\n/g, '<br>');
 }
 function chatCard(){
-  const qs = COACH_TOPICS.slice(0, 5).map(x => L(x.ko, x.en));
+  const qs = COACH_TOPICS.slice(0, 6).map(x => L(x.ko, x.en));
   return `<section class="card c-l" id="aiCard">${SH('sparkle',{c:'#fff',r:-10,t:-10,s:74})}
     <div class="head"><span class="T" style="font-size:26px">${L('재무상담', 'Money coach')}</span>${chat.msgs.length ? `<button class="va" data-chatclear="1">${L('지우기', 'Clear')}</button>` : `<span class="tiny ink2">${L('무료 · 내 숫자로 계산해요', 'Free · uses your numbers')}</span>`}</div>
     <div class="chatlog" id="chatlog">${chat.msgs.map(m => `<div class="bubble ${m.role}">${m.role === 'assistant' ? mdLite(m.content) : esc(m.content)}</div>`).join('')}</div>
@@ -1049,6 +1142,10 @@ function viewHome(){
   const net = f.inc - f.exp;
   const other = cur === 'AUD' ? 'KRW' : 'AUD';
   const recs = recommendations(), done = S.settings.todoDone[m] || {};
+  const cm = thisMonth(), fc0 = flow(cm, mode), avgP = avgFlow(cm, 6, mode), personalNow = fc0.exp - fc0.biz;
+  const cap = spendCap(cur), dim = daysIn(cm), day = +today().slice(8), left = cap != null ? cap - personalNow : null;
+  const typ = typicalPersonal(cur), suggest = typ ? roundCap(typ * 0.85, cur) : null;
+  const ca = cashAcct();
   const invested = h.stock + h.invest + h.saving;
   const ws = worthSeries(cur); const growth = ws.length >= 2 ? ws[ws.length-1].v - ws[0].v : null;
   const rate = f.inc > 0 ? Math.round(net / f.inc * 100) : null;
@@ -1081,6 +1178,26 @@ function viewHome(){
         `${p.inc > 0 ? `<b>${fm(Math.abs(incDiff), cur)} ${up ? 'more' : 'less'}</b> than last month. ` : 'No previous month to compare yet. '}You spent ${fm(f.exp, cur)} and kept <b>${fm(net, cur, {sign:true})}</b>.`)}</div>
       <div class="tags">${curSeg('homeCur', cur, [['AUD','AUD'],['KRW','KRW']])}${rate != null ? `<span class="tag">♡ 저축률 ${rate}%</span>` : ''}</div>
     </section>
+    <section class="card c-y capcard">
+      ${SH('sparkle',{c:'#fff',r:-16,b:-16,s:70})}
+      <div class="who"><span>${L(`${monthLong(cm)} 생활비`, `${monthLong(cm)} living costs`)}</span><span class="tiny ink2">${L(`${dim}일 중 ${day}일째`, `day ${day} of ${dim}`)}</span></div>
+      ${cap != null ? `
+        <div class="capnum num">${fm(personalNow, cur)} <span>/ ${fm(cap, cur)}</span></div>
+        <div class="capbar"><i style="width:${Math.min(100, personalNow / cap * 100)}%" class="${personalNow > cap * day / dim * 1.1 ? 'over' : ''}"></i><b style="left:${day / dim * 100}%"></b></div>
+        <div class="sub">${left >= 0 ? L(`<b>${fm(left, cur)}</b> 남았어요 · 남은 ${dim - day + 1}일 동안 하루 <b>${fm(left / (dim - day + 1), cur)}</b>씩 쓸 수 있어요.`, `<b>${fm(left, cur)}</b> left · <b>${fm(left / (dim - day + 1), cur)}</b> a day for the remaining ${dim - day + 1} days.`)
+          : L(`한도를 <b>${fm(-left, cur)}</b> 넘었어요. 남은 기간은 꼭 필요한 것만!`, `<b>${fm(-left, cur)}</b> over the cap. Essentials only for the rest of the month!`)}
+          ${L(`사업 지출 ${fm(fc0.biz, cur)}은 따로 계산해요.`, `Business spending (${fm(fc0.biz, cur)}) is counted separately.`)}</div>
+        <form class="row capedit" data-capform="1"><span class="tiny">${L('한도', 'Cap')}</span><input type="number" id="capIn" value="${Math.round(cap)}" step="any" min="0" style="width:120px"><span class="tiny">${cur}</span><button class="btn sm">${L('바꾸기', 'Change')}</button></form>`
+      : `<div class="sub">${L(`보통 달 생활비(사업비 빼고, 최근 6개월 중간값)는 <b>${typ ? fm(typ, cur) : '—'}</b>예요. 15% 줄인 금액으로 한도를 정해 볼까요?`, `A typical month's living costs (excluding business, 6-month median) are <b>${typ ? fm(typ, cur) : '—'}</b>. Set a cap 15% lower?`)}</div>
+        <form class="row capedit" data-capform="1"><input type="number" id="capIn" value="${suggest || ''}" step="any" min="0" style="width:130px"><span class="tiny">${cur}</span><button class="btn sm primary">${L('한도 정하기', 'Set cap')}</button></form>`}
+      <div class="quick">
+        <button class="btn sm ${homeAdd === 'cashin' ? 'primary' : ''}" data-homeadd="cashin">${L('+ 현금 받음', '+ Cash in')}</button>
+        <button class="btn sm ${homeAdd === 'cashout' ? 'primary' : ''}" data-homeadd="cashout">${L('+ 현금 씀', '+ Cash spent')}</button>
+        <button class="btn sm ${homeAdd === 'spend' ? 'primary' : ''}" data-homeadd="spend">${L('+ 지출', '+ Spending')}</button>
+      </div>
+      ${homeAdd === 'cashin' ? addForm('inc', {cat: '현금 수입', acct: ca && ca.id}) : homeAdd === 'cashout' ? addForm('exp', {acct: ca && ca.id}) : homeAdd === 'spend' ? addForm('exp', {acct: (S.settings.accounts.find(a => a.type === 'bank') || {}).id}) : ''}
+      ${ca ? `<p class="tiny ink2" style="margin-top:8px">${L('들고 있는 현금', 'Cash on hand')} <b>${fm(conv(currentBalance(ca), ca.cur, cur), cur)}</b> · ${L('현금 받으면 바로 적어 두세요', 'log cash as soon as you get it')}</p>` : ''}
+    </section>
     <section class="card worth">
       <div class="who"><span>지금 총 재산</span><button class="va" data-set="homeCur" data-val="${other}">${other} 보기 ↗</button></div>
       <div class="tot num">${fm(h.total, cur)}</div>
@@ -1096,21 +1213,23 @@ function viewHome(){
     <section class="card">
       ${SH('flower',{c:'#F4C6D9',r:-40,t:-40,s:150,n:5})}
       <div class="head"><span class="T">이번 달<br>목표</span></div>
-      <div class="todo">${recs.map(r => `<label class="${done[r.id] ? 'done' : ''}"><input type="checkbox" data-todo="${r.id}" ${done[r.id] ? 'checked' : ''}>
-        <div><div class="t">${r.t}<span class="tag">${r.tag}</span></div><div class="d">${r.d}</div></div></label>`).join('')}</div>
+      <div class="todo">${recs.map(r => `<div class="goalrow ${done[r.id] ? 'done' : ''}"><input type="checkbox" data-todo="${r.id}" ${done[r.id] ? 'checked' : ''} aria-label="${L('완료', 'done')}">
+        <button class="gbody" data-rec="${r.id}"><div class="t">${r.t}<span class="tag">${r.tag}</span><i class="caret">${openRec === r.id ? '▴' : '▾'}</i></div><div class="d">${r.d}</div></button></div>
+        ${openRec === r.id && r.more ? `<div class="detail gdetail">${r.more()}</div>` : ''}`).join('')}</div>
       <div class="tags"><span class="tag f">${Object.values(done).filter(Boolean).length} / ${recs.length} 완료</span><span class="tag">내 기록 보고 추천</span></div>
     </section>
     <section class="card c-g">
       ${SH('smiley',{r:16,t:18,s:66})}
       <div class="head"><span class="T">어디에<br>썼나</span></div>
-      ${cats.length ? `<div class="list">${cats.map(([c, v]) => `<div class="li"><span class="nm">${c}</span><b class="num">${fm(v, cur)}</b></div>`).join('')}</div>` : '<p class="small">이 달엔 지출 기록이 없어요.</p>'}
+      ${cats.length ? `<div class="split2"><div><h3>${L('생활', 'Personal')} · ${fc(f.exp - f.biz, cur)}</h3><div class="list">${EXP_CATS.filter(c => CAT[c].need !== 'biz').map(c => [c, f.cats[c] || 0]).filter(([, v]) => v > 0.5).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c, v]) => `<div class="li"><span class="nm">${c}</span><b class="num">${fm(v, cur)}</b></div>`).join('')}</div></div>
+        <div><h3>${L('사업', 'Business')} · ${fc(f.biz, cur)}</h3><div class="list">${EXP_CATS.filter(c => CAT[c].need === 'biz').map(c => [c, f.cats[c] || 0]).filter(([, v]) => v > 0.5).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<div class="li"><span class="nm">${c}</span><b class="num">${fm(v, cur)}</b></div>`).join('') || `<p class="tiny ink2">${L('없음', 'none')}</p>`}</div></div></div>` : '<p class="small">이 달엔 지출 기록이 없어요.</p>'}
       <div class="tags"><button class="tag" data-tab="flow">전체 보기 ↗</button></div>
     </section>
   </div>`;
 }
 
 /* ================= TAB 2: 수입·지출 ================= */
-let openCat = null, addOpen = null, txDelAsk = null;
+let openCat = null, addOpen = null, txDelAsk = null, homeAdd = null, openRec = null;
 // income/expense rows of one month, optionally one category
 function monthTx(m, mode, kind, cat){
   return (S.months[m] || []).filter(t => { const a = acctById(t.acct); if (!a) return false;
@@ -1128,13 +1247,13 @@ function catDetail(m, mode, kind, cat){
         <select data-cat="${t.id}" aria-label="분류">${CATS.map(x => `<option value="${x.c}" ${t.cat===x.c?'selected':''}>${x.c}</option>`).join('')}</select>
         ${txDelAsk === t.id ? `<span class="row" style="gap:4px"><button class="btn sm danger" data-txdelok="${t.id}">삭제</button><button class="btn sm" data-txdelno="1">취소</button></span>` : `<button class="btn sm ghost" data-txdel="${t.id}" aria-label="삭제">✕</button>`}</div></div>`; }).join('') || '<p class="tiny ink2">거래가 없어요.</p>'}</div>`;
 }
-function addForm(kind){
+function addForm(kind, pre = {}){
   const inc = kind === 'inc';
   return `<form id="addTx" class="addform" data-kind="${kind}">
     <input type="hidden" id="atType" value="${inc ? 1 : -1}">
     <div class="row"><input type="number" id="atAmt" placeholder="금액" step="any" min="0" style="flex:1;min-width:110px" required>
-      <select id="atCat" aria-label="분류">${CATS.filter(x => x.k === (inc ? 'income' : 'expense')).map(x => `<option value="${x.c}">${x.c}</option>`).join('')}</select></div>
-    <div class="row"><select id="atAcct" aria-label="계좌" style="flex:1">${S.settings.accounts.map(a => `<option value="${a.id}" ${a.type==='cash'?'selected':''}>${esc(a.name)}</option>`).join('')}</select>
+      <select id="atCat" aria-label="분류">${CATS.filter(x => x.k === (inc ? 'income' : 'expense')).map(x => `<option value="${x.c}" ${pre.cat === x.c ? 'selected' : ''}>${x.c}</option>`).join('')}</select></div>
+    <div class="row"><select id="atAcct" aria-label="계좌" style="flex:1">${S.settings.accounts.map(a => `<option value="${a.id}" ${(pre.acct ? pre.acct === a.id : a.type === 'cash') ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>
       <input type="date" id="atDate" value="${today()}" aria-label="날짜"></div>
     <div class="row"><input type="text" id="atDesc" placeholder="${inc ? '메모 (예: 현금 손님)' : '메모 (예: 친구랑 저녁)'}" style="flex:1;min-width:140px"><button class="btn primary">추가</button></div>
   </form>`;
@@ -1186,7 +1305,9 @@ function viewFlow(){
       <div class="head"><h2>쓴 돈</h2><b class="num" style="font-size:22px">${fm(f.exp, cur)}</b></div>
       <div class="row" style="justify-content:flex-end;margin:-6px 0 10px"><button class="btn sm ${addOpen === 'exp' ? 'primary' : ''}" data-addopen="exp">${addOpen === 'exp' ? '닫기' : '+ 지출 추가'}</button></div>
       ${addOpen === 'exp' ? addForm('exp') : ''}
-      ${cats.length ? `<div class="hbars">${cats.map(([c, v]) => `<button class="hbar hbtn ${open('exp', c) ? 'on' : ''}" data-opencat="exp:${esc(c)}"><span>${c}</span><div class="track"><div class="fill" style="width:${Math.max(0, v)/maxc*100}%"></div></div><span class="num small">${fm(v, cur)} <i>${open('exp', c) ? '▴' : '▾'}</i></span></button>${open('exp', c) ? catDetail(m, mode, 'expense', c) : ''}`).join('')}</div>` : '<p class="small ink2">이 달엔 지출 기록이 없어요.</p>'}
+      ${cats.length ? [['personal', L('생활 지출', 'Personal'), cats.filter(([c]) => (CAT[c] || {}).need !== 'biz')], ['biz', L('사업 지출 · 재료·광고·출장', 'Business · supplies, ads, travel'), cats.filter(([c]) => (CAT[c] || {}).need === 'biz')]].filter(([, , xs]) => xs.length).map(([k, label, xs]) => `
+        <div class="grouphead"><h3>${label}</h3><b class="num">${fm(xs.reduce((s, [, v]) => s + v, 0), cur)}</b></div>
+        <div class="hbars">${xs.map(([c, v]) => `<button class="hbar hbtn ${open('exp', c) ? 'on' : ''}" data-opencat="exp:${esc(c)}"><span>${c}</span><div class="track"><div class="fill ${k === 'biz' ? 'bizfill' : ''}" style="width:${Math.max(0, v)/maxc*100}%"></div></div><span class="num small">${fm(v, cur)} <i>${open('exp', c) ? '▴' : '▾'}</i></span></button>${open('exp', c) ? catDetail(m, mode, 'expense', c) : ''}`).join('')}</div>`).join('') : '<p class="small ink2">이 달엔 지출 기록이 없어요.</p>'}
       <p class="tiny ink2" style="margin-top:12px">카테고리를 누르면 거래가 펼쳐지고, 금액·분류를 바로 고칠 수 있어요. 내 계좌끼리 옮긴 돈은 빼고, 투자로 보낸 돈(${fm(Math.max(0, f.inv), cur)})은 저축으로 따로 쳐요.</p>
     </section>
     ${txTable(m)}
@@ -1220,9 +1341,10 @@ function viewBudget(){
   const paceFrac = day / dim;
   const projected = isNow && day >= 10 ? f.exp / day * dim : f.exp;
   // 50/30/20
-  let needs = 0, wants = 0; for (const c in f.cats){ if ((CAT[c]||{}).need === 'needs') needs += f.cats[c]; else wants += f.cats[c]; }
-  const inc = f.inc > 0 ? f.inc : (avg ? avg.inc : 0);
-  const saved = inc - f.exp;
+  let needs = 0, wants = 0; for (const c in f.cats){ const n = (CAT[c]||{}).need; if (n === 'needs') needs += f.cats[c]; else if (n !== 'biz') wants += f.cats[c]; }
+  // business costs come off the top: 50/30/20 is about the money left for your own life
+  const inc = (f.inc > 0 ? f.inc : (avg ? avg.inc : 0)) - f.biz;
+  const saved = inc - (f.exp - f.biz);
   const r = v => inc > 0 ? v / inc * 100 : null;
   const st = (v, lim, higherBetter) => v == null ? '' : (higherBetter ? v >= lim : v <= lim) ? `<span class="state ok">● 좋아요</span>` : (higherBetter ? v >= lim*0.6 : v <= lim*1.25) ? `<span class="state warn">▲ 조금 넘었어요</span>` : `<span class="state bad">■ 많이 벗어났어요</span>`;
   const budgets = S.settings.budgets || {};
@@ -1500,6 +1622,8 @@ document.addEventListener('click', e => {
     persist('settings'); render(); toast('지웠어요');
   }
   else if (d.cancel) render();
+  else if (d.rec){ openRec = openRec === d.rec ? null : d.rec; render(); }
+  else if (d.homeadd){ homeAdd = homeAdd === d.homeadd ? null : d.homeadd; if (homeAdd) openRec = null; render(); setTimeout(() => { const i = $('#atAmt'); if (i) i.focus(); }, 30); }
   else if (d.opencat){ openCat = openCat === d.opencat ? null : d.opencat; txDelAsk = null; render(); }
   else if (d.addopen){ addOpen = addOpen === d.addopen ? null : d.addopen; render(); }
   else if (d.txdel){ txDelAsk = d.txdel; render(); }
@@ -1571,6 +1695,7 @@ document.addEventListener('input', e => { if (e.target.id === 'fQ'){ clearTimeou
 
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
+  if (f.dataset.capform){ const v = parseFloat($('#capIn').value); if (!(v > 0)){ toast('숫자로 적어 주세요'); return; } S.settings.spendCap = conv(v, homeCur, 'AUD'); persist('settings'); render(); toast(L('생활비 한도를 정했어요', 'Spending cap set')); return; }
   if (f.id === 'chatForm'){ const q = $('#chatIn').value; askAI(q); setTimeout(() => { const i = $('#chatIn'); if (i) i.focus(); }, 0); return; }
 
   if (f.dataset.encform){ const id = f.dataset.encform, err = $('#encErr-' + id), btn = f.querySelector('button');
@@ -1590,7 +1715,7 @@ document.addEventListener('submit', e => {
     let acct = $('#atAcct').value; const cat = $('#atCat').value, desc = $('#atDesc').value.trim() || cat;
     if (demo){ leaveDemo(); if (!acctById(acct)) acct = 'cashA'; }
     const m = monthOf(date); (S.months[m] ??= []).push({id: uid(), acct, date, amt: sign * amt, desc, cat, manual: true, seq: 1e6});
-    persistMonth(m); persist('settings'); addOpen = null; render(); toast('추가했어요');
+    persistMonth(m); persist('settings'); addOpen = null; homeAdd = null; render(); toast('추가했어요');
   }
 });
 
@@ -1619,6 +1744,7 @@ async function loadEnc(pass){
   demo = false;
   S.settings = Object.assign(defaultSettings(), d.settings); S.months = d.months || {};
   S.settings.syncedAt = e.savedAt || new Date().toISOString();
+  migrateData();
   lsSet('ntk-pass', pass.trim());   // this device already holds the decrypted data, so remembering the key here adds nothing new
   persist('settings'); Object.keys(S.months).forEach(persistMonth);
   return Object.values(S.months).flat().length;
