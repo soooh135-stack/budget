@@ -486,7 +486,7 @@ function translateDOM(root){
 
 function defaultSettings(){
   return {
-    fx: 950, fxDate: today(),
+    fx: 950, fxUsd: 1350, fxDate: today(),
     accounts: [
       {id:'cba1', bank:'cba', name:'CommBank Everyday', cur:'AUD', type:'bank', snaps:[]},
       {id:'kb1', bank:'kb', name:'국민 입출금', cur:'KRW', type:'bank', snaps:[]},
@@ -513,13 +513,14 @@ function fmt(v, cur, o={}){
     if (o.compact && a >= 1e6) s = (a/1e6).toFixed(2).replace(/\.?0+$/,'') + 'M';
     else if (o.compact && a >= 1e4) s = (a/1e3).toFixed(1).replace(/\.0$/,'') + 'k';
     else { const nc = o.noCents || o.compact; s = a.toLocaleString('en-AU', {minimumFractionDigits: nc ? 0 : 2, maximumFractionDigits: nc ? 0 : 2}); }
-    s = 'A$' + s;
+    s = (cur === 'USD' ? 'US$' : 'A$') + s;
   }
   return (neg ? '−' : (o.sign && v > 0 ? '+' : '')) + s;
 }
 const fm = (v, cur, o={}) => fmt(v, cur, Object.assign({noCents:true}, o));
 const fc = (v, cur, o={}) => fmt(v, cur, Object.assign({compact:true}, o));
-function conv(v, from, to){ if (from === to) return v; const fx = S.settings.fx || 950; return from === 'AUD' ? v*fx : v/fx; }
+// everything converts through KRW: fx = KRW per AUD, fxUsd = KRW per USD
+function conv(v, from, to){ if (from === to) return v; const k = {KRW: 1, AUD: S.settings.fx || 950, USD: S.settings.fxUsd || 1350}; return v * k[from] / k[to]; }
 const pct = (a, b) => b ? a / b * 100 : null;
 
 /* ================= derived data ================= */
@@ -600,10 +601,10 @@ function avgFlow(endMonth, n, mode){
   return avg;
 }
 function holdings(cur){
-  const h = {bank:0, saving:0, cash:0, ewallet:0, stock:0, invest:0, total:0, aud:0, krw:0};
+  const h = {bank:0, saving:0, cash:0, ewallet:0, stock:0, invest:0, total:0, aud:0, krw:0, usd:0};
   for (const a of S.settings.accounts){
     const b = currentBalance(a);
-    if (a.cur === 'AUD') h.aud += b; else h.krw += b;
+    if (a.cur === 'AUD') h.aud += b; else if (a.cur === 'USD') h.usd += b; else h.krw += b;
     const v = conv(b, a.cur, cur);
     h[a.type] = (h[a.type]||0) + v; h.total += v;
   }
@@ -934,107 +935,108 @@ function stage(kind){
   return `<div class="stage" aria-hidden="true">${sets[kind] || ''}</div>`;
 }
 
-/* ================= AI money coach (standalone only; uses the owner's own API key) ================= */
-const chat = {msgs: [], busy: false, err: ''};
-let AnthropicSDK = null;
-const aiKey = () => lsGet('ntk-ai-key') || '';
-async function aiClient(){
-  if (!AnthropicSDK) AnthropicSDK = (await import('https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.3.0/+esm')).default;
-  return new AnthropicSDK({apiKey: aiKey(), dangerouslyAllowBrowser: true});
-}
-// A compact, name-free summary of the finances (no transaction descriptions leave the device).
-function finSnapshot(){
-  const cur = 'AUD', h = holdings(cur), ms = monthsWithData().slice(-12);
-  const r0 = v => Math.round(v);
-  const monthly = ms.map(m => { const f = flow(m, 'ALL-AUD'); return {month: m, earned: r0(f.inc), earnedBank: r0(f.incBank), earnedCash: r0(f.incCash), spent: r0(f.exp), invested: r0(f.inv), leftOver: r0(f.inc - f.exp)}; });
-  const last3 = ms.filter(m => m < thisMonth()).slice(-3), catAvg = {}, incAvg = {};
-  for (const m of last3){ const f = flow(m, 'ALL-AUD'); for (const c in f.cats) catAvg[c] = (catAvg[c] || 0) + f.cats[c] / last3.length; for (const c in f.incCats) incAvg[c] = (incAvg[c] || 0) + f.incCats[c] / last3.length; }
-  const avg6 = avgFlow(addMonths(homeMonth(), 1), 6, 'ALL-AUD');
-  return {
-    today: today(), baseCurrency: 'AUD', fx: {audToKrw: S.settings.fx, asOf: S.settings.fxDate},
-    totalWealthAUD: r0(h.total), byType: {bankAndSavings: r0(h.bank + h.saving), savingsAccounts: r0(h.saving), cash: r0(h.cash), paypal: r0(h.ewallet), stocks: r0(h.stock), otherInvestments: r0(h.invest)},
-    audHeld: r0(h.aud), krwHeld: r0(h.krw),
-    accounts: S.settings.accounts.map(a => ({name: a.name, type: a.type, currency: a.cur, balance: r0(currentBalance(a)), lastRecord: lastUpdated(a)})),
-    monthlyAUD: monthly,
-    spendingByCategoryAvgLast3MonthsAUD: Object.fromEntries(Object.entries(catAvg).map(([k, v]) => [k, r0(v)]).sort((a, b) => b[1] - a[1])),
-    incomeByCategoryAvgLast3MonthsAUD: Object.fromEntries(Object.entries(incAvg).map(([k, v]) => [k, r0(v)])),
-    sixMonthAverageAUD: avg6 ? {earned: r0(avg6.inc), spent: r0(avg6.exp), invested: r0(avg6.inv)} : null,
-    emergencyFundMonths: avg6 && avg6.exp > 0 ? +((h.bank + h.saving + h.cash + h.ewallet) / avg6.exp).toFixed(1) : null,
-    activeSubscriptionsAUDPerMonth: subsAll('AUD').filter(s => s.active && !s.hidden).map(s => ({name: s.name, kind: s.tag, perMonth: +s.monthly.toFixed(2), yearly: s.yearly})),
-    budgetsAUD: S.settings.budgets || {}, goals: (S.settings.goals || []).map(g => ({name: g.name, target: g.target, currency: g.cur, due: g.due})),
-    notes: ['Income categories: 사업 수입 = self-employed/business income from clients; 현금 수입 = cash income (cash deposits).',
-            'Transfers between own accounts are excluded from earned/spent; money moved into investments is counted as invested, not spent.',
-            'Stock value is an estimate from recent prices. Some bank histories are incomplete before ~2026-04 (export row limits), so older months may undercount.',
-            'A one-off gift to a parent (a car, about A$17.8k) is inside September 2026 spending.'],
-  };
-}
-function aiSystem(){
-  return `You are a warm, practical personal financial planner inside the user's own budgeting app. The user lives in Australia, earns mostly in AUD as a self-employed worker (much of it paid in cash), and also holds money and investments in Korea (KRW). Below is a fresh snapshot of their finances computed from their own bank records.
-
-How to answer:
-- Answer in ${lang === 'en' ? 'English' : 'Korean (casual, friendly 해요체)'}.
-- Ground every claim in the snapshot numbers and quote the actual figures. If the data can't answer something, say what is missing.
-- Be concrete and specific to this person: name categories, subscriptions and amounts; give 2–4 clear next steps when they ask what to do.
-- Keep it short and readable on a phone: a few short paragraphs or a short bullet list, no tables. Use **bold** sparingly for key numbers.
-- General education only — for tax or legal specifics, suggest checking with an accountant.
-
-<snapshot>
-${JSON.stringify(finSnapshot())}
-</snapshot>`;
+/* ================= money coach (free, on-device: answers are computed from the user's own numbers) ================= */
+const chat = {msgs: []};
+const COACH_TOPICS = [
+  {id:'earn',  re:/벌|수입|소득|매출|income|earn|making/i,           ko:'나 돈 잘 벌고 있어?',     en:'How well am I earning?'},
+  {id:'save',  re:/아끼|아낄|아껴|절약|줄이|줄일|낭비|save|cut|waste/i,              ko:'어디서 더 아낄 수 있어?', en:'Where can I save more?'},
+  {id:'month', re:/이번 ?달|지난 ?달|썼|지출|spent|spend|month/i,      ko:'이번 달 어디에 많이 썼어?', en:'Where did my money go this month?'},
+  {id:'emerg', re:/비상|안전|emergency|safety|cushion/i,              ko:'비상금 충분해?',          en:'Is my emergency fund enough?'},
+  {id:'invest',re:/투자|주식|etf|invest|stock|portfolio|비중/i,       ko:'투자 비중 어떻게 할까?',  en:'How should I split my investments?'},
+  {id:'subs',  re:/구독|subscri|netflix|헬스|gym/i,                   ko:'구독 정리할 거 있어?',    en:'Any subscriptions to cut?'},
+  {id:'worth', re:/재산|자산|순자산|부자|wealth|net worth|rich/i,      ko:'내 재산 얼마나 늘었어?',  en:'How much has my wealth grown?'},
+];
+function coachAnswer(q){
+  const t = COACH_TOPICS.find(x => x.re.test(q));
+  const cur = homeCur, mode = 'ALL-' + cur, m = homeMonth(), f = flow(m, mode), avg = avgFlow(m, 6, mode), h = holdings(cur);
+  const ms = monthsWithData().filter(x => x <= m).slice(-7, -1), fs = ms.map(x => flow(x, mode));
+  const B = s => `**${s}**`, cn = c => lang === 'en' ? (DICT[c] || c) : c;
+  if (!t) return L(`이런 걸 물어볼 수 있어요:\n${COACH_TOPICS.map(x => '- ' + x.ko).join('\n')}`, `Here's what I can answer:\n${COACH_TOPICS.map(x => '- ' + x.en).join('\n')}`);
+  if (t.id === 'earn'){
+    if (!avg) return L('비교할 지난 기록이 아직 부족해요. 두 달 이상 쌓이면 알려줄게요.', 'Not enough history yet — ask again after two months of data.');
+    const diff = pct(f.inc - avg.inc, avg.inc) || 0, best = fs.length ? ms[fs.reduce((bi, x, i, a) => x.inc > a[bi].inc ? i : bi, 0)] : null;
+    const rate = f.inc > 0 ? (f.inc - f.exp) / f.inc * 100 : null, cashShare = f.inc > 0 ? f.incCash / f.inc * 100 : 0;
+    const biz = (f.incCats['사업 수입'] || 0) + (f.incCats['현금 수입'] || 0);
+    const verdict = diff >= 10 ? L('평소보다 잘 번 달이에요 👍', 'a stronger month than usual 👍') : diff <= -10 ? L('평소보다 적게 번 달이에요.', 'a weaker month than usual.') : L('평소 수준이에요.', 'about your usual level.');
+    return L(`${monthLong(m)}에 ${B(fm(f.inc, cur))} 벌었어요. 최근 6개월 평균 ${fm(avg.inc, cur)}보다 ${diff >= 0 ? '+' : ''}${diff.toFixed(0)}%로, ${verdict}
+- 사업·현금 수입이 ${f.inc > 0 ? Math.round(biz / f.inc * 100) : 0}%예요.${cashShare >= 1 ? ` 그중 현금이 ${cashShare.toFixed(0)}%예요.` : ''}${best ? `\n- 최근 6개월 중 가장 많이 번 달은 ${monthLong(best)}이에요.` : ''}
+- 번 돈 중 남긴 비율(저축률)은 ${rate == null ? '—' : B(rate.toFixed(0) + '%')}예요. ${rate != null && rate < 20 ? '20%를 목표로 잡아 보세요.' : '좋은 편이에요.'}
+- 수입이 들쭉날쭉한 자영업은 ${B('평균 수입 기준으로 생활비를 정하고')}, 많이 번 달의 남는 돈은 바로 저축·투자로 옮기는 게 안전해요.`,
+`You earned ${B(fm(f.inc, cur))} in ${monthLong(m)} — ${diff >= 0 ? '+' : ''}${diff.toFixed(0)}% vs your 6-month average of ${fm(avg.inc, cur)}, ${verdict}
+- Business and cash income make up ${f.inc > 0 ? Math.round(biz / f.inc * 100) : 0}%.${cashShare >= 1 ? ` Cash alone is ${cashShare.toFixed(0)}%.` : ''}${best ? `\n- Your best month in the last six was ${monthLong(best)}.` : ''}
+- You kept ${rate == null ? '—' : B(rate.toFixed(0) + '%')} of what you earned. ${rate != null && rate < 20 ? 'Aim for 20%.' : 'That\'s healthy.'}
+- With uneven self-employed income, ${B('budget your living costs on your average month')} and move the extra from big months straight into savings or investments.`);
+  }
+  if (t.id === 'save' || t.id === 'subs'){
+    const subs = subsAll(cur).filter(s => s.active && !s.hidden), subT = subs.reduce((s, x) => s + x.monthly, 0);
+    const ai = subs.filter(s => s.tag === 'AI');
+    const lines = [];
+    if (avg){ const grew = EXP_CATS.filter(c => CAT[c].need === 'wants').map(c => ({c, now: f.cats[c] || 0, was: avg.cats[c] || 0})).filter(x => x.now > x.was * 1.2 && x.now - x.was > (cur === 'AUD' ? 30 : 30000)).sort((a, b) => (b.now - b.was) - (a.now - a.was)).slice(0, 2);
+      for (const g of grew) lines.push(L(`${cn(g.c)}: ${monthLong(m)} ${fm(g.now, cur)}, 평소 ${fm(g.was, cur)}보다 ${fm(g.now - g.was, cur)} 더 썼어요.`, `${cn(g.c)}: ${fm(g.now, cur)} in ${monthLong(m)}, ${fm(g.now - g.was, cur)} above your usual ${fm(g.was, cur)}.`)); }
+    if (subs.length) lines.push(L(`구독 ${subs.length}개로 매달 ${B(fm(subT, cur))}, 1년 ${fm(subT * 12, cur)}가 나가요.${ai.length >= 2 ? ` AI 구독이 ${ai.length}개(${ai.map(s => s.name).join(', ')})라 하나만 남기면 1년 ${fm(Math.min(...ai.map(s => s.monthly)) * 12, cur)} 아껴요.` : ''}`,
+      `${subs.length} subscriptions cost ${B(fm(subT, cur))} a month (${fm(subT * 12, cur)} a year).${ai.length >= 2 ? ` You have ${ai.length} AI tools (${ai.map(s => s.name).join(', ')}) — keeping one saves ${fm(Math.min(...ai.map(s => s.monthly)) * 12, cur)} a year.` : ''}`));
+    const fee = avg ? (avg.cats['세금·수수료'] || 0) : 0;
+    if (fee > (cur === 'AUD' ? 10 : 10000)) lines.push(L(`세금·수수료가 한 달 평균 ${fm(fee, cur)}예요. 해외 결제가 많다면 해외 수수료 없는 카드(예: Wise, Up, ING)로 바꾸면 줄일 수 있어요.`, `Tax & fees average ${fm(fee, cur)} a month. If you pay overseas often, a card with no foreign-transaction fee (Wise, Up, ING) cuts this.`));
+    const food = (f.cats['음식'] || 0) + (f.cats['친구 약속'] || 0) + (f.cats['데이트'] || 0);
+    if (f.exp > 0 && food / f.exp > .15) lines.push(L(`외식·약속·데이트가 지출의 ${Math.round(food / f.exp * 100)}%예요. 예산 진단 탭에 한 달 상한을 정해 두면 자연스럽게 줄어요.`, `Eating out, friends and dates are ${Math.round(food / f.exp * 100)}% of spending. Setting a cap in Budget check helps.`));
+    if (t.id === 'subs') return subs.length ? L(`지금 쓰는 구독이에요:\n${subs.map(s => `- ${s.name}: ${fm(s.monthly, cur)}/월`).join('\n')}\n\n${lines.find(l => l.includes('구독')) || ''}\n지난 한 달 동안 한 번도 안 쓴 게 있으면 그것부터 해지하세요.`, `Your active subscriptions:\n${subs.map(s => `- ${cn(s.name)}: ${fm(s.monthly, cur)}/mo`).join('\n')}\n\nCancel anything you didn't use last month first.`) : L('지금 결제 중인 구독이 안 보여요.', 'No active subscriptions found.');
+    return (lines.length ? L('아낄 수 있는 곳이에요:\n', 'Places to save:\n') + lines.map(l => '- ' + l).join('\n') : L('평소보다 크게 늘어난 지출은 없어요. 잘하고 있어요!', 'Nothing has jumped above your usual spending. Nice work!'))
+      + L(`\n\n가장 쉬운 방법은 ${B('월급날 먼저 저축하고 남은 돈으로 쓰는 것')}이에요.`, `\n\nThe easiest win: ${B('save first on payday, spend what\'s left')}.`);
+  }
+  if (t.id === 'month'){
+    const top = EXP_CATS.map(c => [c, f.cats[c] || 0]).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    return L(`${monthLong(m)}에 ${B(fm(f.exp, cur))} 썼어요${avg ? ` (평소 ${fm(avg.exp, cur)})` : ''}.\n${top.map(([c, v]) => `- ${c}: ${fm(v, cur)} (${Math.round(v / f.exp * 100)}%)`).join('\n')}\n수입·지출 탭에서 카테고리를 누르면 거래를 하나씩 볼 수 있어요.`,
+      `You spent ${B(fm(f.exp, cur))} in ${monthLong(m)}${avg ? ` (usually ${fm(avg.exp, cur)})` : ''}.\n${top.map(([c, v]) => `- ${cn(c)}: ${fm(v, cur)} (${Math.round(v / f.exp * 100)}%)`).join('\n')}\nTap a category in Money in & out to see each transaction.`);
+  }
+  if (t.id === 'emerg'){
+    const liquid = h.bank + h.saving + h.cash + h.ewallet, mo = avg && avg.exp > 0 ? liquid / avg.exp : null;
+    if (mo == null) return L('평균 지출을 계산할 기록이 아직 부족해요.', 'Not enough spending history yet.');
+    return L(`바로 쓸 수 있는 돈(은행·현금·PayPal)은 ${B(fm(liquid, cur))}, 평균 지출 ${fm(avg.exp, cur)} 기준 ${B(mo.toFixed(1) + '개월치')}예요.
+- 자영업은 수입이 불규칙해서 ${B('6개월치')}(${fm(avg.exp * 6, cur)})를 권해요. ${mo >= 6 ? '이미 충분해요 👍' : `${fm(avg.exp * 6 - liquid, cur)} 더 모으면 돼요.`}
+${mo > 9 ? `- 9개월치를 넘는 ${fm(liquid - avg.exp * 9, cur)}는 그냥 두면 아까워요. 이자 높은 저축 계좌나 투자로 옮기는 걸 고려해 보세요.` : '- 비상금은 이자 높은 저축 계좌(호주 high-interest savings)에 두면 안전하면서 이자도 받아요.'}`,
+`Ready money (bank, cash, PayPal) is ${B(fm(liquid, cur))}, which covers ${B(mo.toFixed(1) + ' months')} of average spending (${fm(avg.exp, cur)}).
+- With irregular self-employed income, aim for ${B('6 months')} (${fm(avg.exp * 6, cur)}). ${mo >= 6 ? 'You\'re already there 👍' : `${fm(avg.exp * 6 - liquid, cur)} to go.`}
+${mo > 9 ? `- The ${fm(liquid - avg.exp * 9, cur)} beyond 9 months is idle money. Consider high-interest savings or investing it.` : '- Keep it in a high-interest savings account so it earns while it waits.'}`);
+  }
+  if (t.id === 'invest'){
+    const inv = h.stock + h.invest, liquid = h.bank + h.saving + h.cash + h.ewallet, total = h.total || 1;
+    return L(`지금 재산 ${fm(h.total, cur)} 중 투자는 ${B(Math.round(inv / total * 100) + '%')}(${fm(inv, cur)}), 은행·현금·PayPal이 ${Math.round(liquid / total * 100)}%예요.
+- 기본 순서: ① 비상금 6개월치 확보 → ② 남는 돈을 꾸준히 투자.${avg && liquid > avg.exp * 6 ? ` 비상금을 빼도 ${fm(liquid - avg.exp * 6, cur)}가 남아서 투자 비중을 더 늘릴 여유가 있어요.` : ''}
+- 개별 주식보다 ${B('S&P500·나스닥100 같은 지수 ETF')} 비중을 높이면 한 종목이 크게 떨어져도 덜 흔들려요.
+- 호주에 살면 ${B('Super(연금) 추가 납입')}이나 호주 ETF도 세금 면에서 유리할 수 있어요. 자세한 건 회계사와 확인하세요.`,
+`Of your ${fm(h.total, cur)}, ${B(Math.round(inv / total * 100) + '%')} is invested (${fm(inv, cur)}) and ${Math.round(liquid / total * 100)}% sits in bank, cash and PayPal.
+- Order of operations: ① 6 months' emergency fund → ② invest the rest steadily.${avg && liquid > avg.exp * 6 ? ` Even after a 6-month fund you have ${fm(liquid - avg.exp * 6, cur)} that could be invested.` : ''}
+- Leaning on ${B('broad index ETFs (S&P 500, Nasdaq 100)')} rather than single stocks smooths out big drops.
+- As an Australian resident, ${B('extra super contributions')} or Australian ETFs can be tax-efficient — check details with an accountant.`);
+  }
+  if (t.id === 'worth'){
+    const ws = worthSeries(cur); if (ws.length < 2) return L('재산 변화는 두 달 이상 쌓이면 보여요.', 'Wealth changes show after two months of data.');
+    const g = ws[ws.length - 1].v - ws[0].v;
+    return L(`${ws.length - 1}개월 동안 재산이 ${B(fm(g, cur, {sign: true}))} 변했어요 (한 달 평균 ${fm(g / (ws.length - 1), cur, {sign: true})}). 지금 총 재산은 ${B(fm(h.total, cur))}이에요.\n자산 계획 탭에서 그래프와 복리 계산기로 앞으로를 볼 수 있어요.`,
+      `Your wealth changed by ${B(fm(g, cur, {sign: true}))} over ${ws.length - 1} months (${fm(g / (ws.length - 1), cur, {sign: true})} a month). Total now: ${B(fm(h.total, cur))}.\nSee the chart and compound calculator in Wealth plan.`);
+  }
 }
 function mdLite(s){
-  return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm, '<b>$1</b>').replace(/^\s*[-•]\s+/gm, '• ').replace(/\n/g, '<br>');
+  return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^\s*-\s+/gm, '• ').replace(/\n/g, '<br>');
 }
 function chatCard(){
-  if (!STANDALONE) return '';
-  const qs = lang === 'en'
-    ? ['How well am I earning?', 'Where can I save more?', 'Is my emergency fund enough?', 'How should I split my investments?']
-    : ['나 돈 잘 벌고 있어?', '어디서 더 아낄 수 있어?', '비상금 충분해?', '투자 비중 어떻게 할까?'];
-  const body = !aiKey()
-    ? `<p class="small ink2" style="margin-bottom:8px">${L('처음 한 번만 Anthropic API 키를 넣으면 돼요. 키는 이 기기에만 저장돼요. console.anthropic.com → API Keys에서 만들 수 있어요.', 'Add an Anthropic API key once. It is stored only on this device. Create one at console.anthropic.com → API Keys.')}</p>
-       <form class="row" data-aikey="1"><input type="password" id="aiKeyIn" placeholder="sk-ant-..." autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1;min-width:160px"><button class="btn primary">${L('연결', 'Connect')}</button></form>`
-    : `<div class="chatlog" id="chatlog">${chat.msgs.map(m => `<div class="bubble ${m.role}">${m.role === 'assistant' ? (m.content ? mdLite(m.content) : `<span class="ink2">${L('생각 중…', 'Thinking…')}</span>`) : esc(m.content)}</div>`).join('')}</div>
-       ${chat.err ? `<p class="tiny neg" style="margin:6px 0">${esc(chat.err)}</p>` : ''}
-       <div class="chips">${qs.map(q => `<button class="tag" data-ask="${esc(q)}" ${chat.busy ? 'disabled' : ''}>${esc(q)}</button>`).join('')}</div>
-       <form class="row" id="chatForm" style="margin-top:10px"><input type="text" id="chatIn" placeholder="${L('무엇이든 물어보세요', 'Ask anything')}" style="flex:1;min-width:160px" ${chat.busy ? 'disabled' : ''}><button class="btn primary" ${chat.busy ? 'disabled' : ''}>${L('보내기', 'Send')}</button></form>`;
+  const qs = COACH_TOPICS.slice(0, 5).map(x => L(x.ko, x.en));
   return `<section class="card c-l" id="aiCard">${SH('sparkle',{c:'#fff',r:-10,t:-10,s:74})}
-    <div class="head"><span class="T" style="font-size:26px">${L('AI 재무상담', 'AI money coach')}</span>${chat.msgs.length ? `<button class="va" data-chatclear="1">${L('새 대화', 'New chat')}</button>` : ''}</div>
-    ${body}</section>`;
+    <div class="head"><span class="T" style="font-size:26px">${L('재무상담', 'Money coach')}</span>${chat.msgs.length ? `<button class="va" data-chatclear="1">${L('지우기', 'Clear')}</button>` : `<span class="tiny ink2">${L('무료 · 내 숫자로 계산해요', 'Free · uses your numbers')}</span>`}</div>
+    <div class="chatlog" id="chatlog">${chat.msgs.map(m => `<div class="bubble ${m.role}">${m.role === 'assistant' ? mdLite(m.content) : esc(m.content)}</div>`).join('')}</div>
+    <div class="chips">${qs.map(q => `<button class="tag" data-ask="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <form class="row" id="chatForm" style="margin-top:10px"><input type="text" id="chatIn" placeholder="${L('예: 비상금 충분해?', 'e.g. Is my emergency fund enough?')}" style="flex:1;min-width:160px"><button class="btn primary">${L('물어보기', 'Ask')}</button></form>
+  </section>`;
 }
 function paintChat(){
   const card = $('#aiCard'); if (!card) return;
   const tmp = document.createElement('div'); tmp.innerHTML = chatCard(); card.replaceWith(tmp.firstElementChild);
   const log = $('#chatlog'); if (log) log.scrollTop = log.scrollHeight;
 }
-async function askAI(q){
-  q = String(q || '').trim(); if (!q || chat.busy) return;
-  chat.err = ''; chat.busy = true;
-  chat.msgs.push({role: 'user', content: q}, {role: 'assistant', content: ''});
+function askAI(q){
+  q = String(q || '').trim(); if (!q) return;
+  chat.msgs.push({role: 'user', content: q}, {role: 'assistant', content: coachAnswer(q)});
   paintChat();
-  const last = chat.msgs[chat.msgs.length - 1];
-  try {
-    const client = await aiClient();
-    const stream = client.beta.messages.stream({
-      model: 'claude-opus-5', max_tokens: 16000,
-      betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
-      thinking: {type: 'adaptive'}, output_config: {effort: 'medium'},
-      system: [{type: 'text', text: aiSystem(), cache_control: {type: 'ephemeral'}}],
-      messages: chat.msgs.slice(0, -1).map(m => ({role: m.role, content: m.content})),
-    });
-    let pending = false;
-    stream.on('text', d => { last.content += d; if (!pending){ pending = true; requestAnimationFrame(() => { pending = false; const b = document.querySelector('#chatlog .bubble.assistant:last-child'); if (b){ b.innerHTML = mdLite(last.content); const log = $('#chatlog'); log.scrollTop = log.scrollHeight; } }); } });
-    const msg = await stream.finalMessage();
-    if (msg.stop_reason === 'refusal') last.content = last.content || L('이 질문에는 답하기 어려워요. 다르게 물어봐 주세요.', 'I can\'t help with that one — try asking another way.');
-    if (!last.content) last.content = msg.content.filter(b => b.type === 'text').map(b => b.text).join('');
-  } catch (e) {
-    chat.msgs.pop(); chat.msgs.pop();
-    const st = e && e.status;
-    chat.err = st === 401 ? L('API 키가 맞지 않아요. 설정에서 다시 넣어 주세요.', 'That API key didn\'t work. Re-enter it in Settings.')
-      : st === 429 || st === 529 ? L('지금 요청이 많아요. 잠시 후 다시 물어봐 주세요.', 'Busy right now. Please try again in a moment.')
-      : st === 400 && /credit|balance/i.test(e.message || '') ? L('API 크레딧이 부족해요. console.anthropic.com에서 충전해 주세요.', 'Your API credit is low. Top up at console.anthropic.com.')
-      : L('답을 받지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.', 'Couldn\'t get an answer. Check your connection and try again.');
-  }
-  chat.busy = false; paintChat();
 }
 
 /* ================= TAB 1: 홈 ================= */
@@ -1060,7 +1062,7 @@ function viewHome(){
   const groups = [
     {k:'은행', v: h.bank + h.saving, c:'#D8D2C2', s: `${names(['bank','saving']).length}개 계좌 · 예적금 ${fc(h.saving, cur)}`},
     {k:'현금', v: h.cash, c:'#BFDDB4', s: list(['cash'], a => `${esc(a.name.replace(/ ?\(.*\)/, ''))} ${fc(currentBalance(a), a.cur)}`)},
-    {k:'PayPal', v: h.ewallet, c:'#D9CCE8', s: list(['ewallet'], a => esc((a.name.match(/\((.*)\)/) || [])[1] || a.name))},
+    {k:'PayPal', v: h.ewallet, c:'#D9CCE8', s: list(['ewallet'], a => a.cur === cur ? esc(a.name) : fmt(currentBalance(a), a.cur))},
     {k:'투자', v: h.stock + h.invest, c:'#F6F47C', s: `주식 ${fc(h.stock, cur)}${h.invest ? ` · 기타 ${fc(h.invest, cur)}` : ''}`},
   ];
   return `<div class="stack">
@@ -1082,7 +1084,7 @@ function viewHome(){
     <section class="card worth">
       <div class="who"><span>지금 총 재산</span><button class="va" data-set="homeCur" data-val="${other}">${other} 보기 ↗</button></div>
       <div class="tot num">${fm(h.total, cur)}</div>
-      <div class="tiny ink2">= ${fm(conv(h.total, cur, other), other)} · ${L('호주', 'AU')} ${fc(h.aud, 'AUD')} + ${L('한국', 'KR')} ${fc(h.krw, 'KRW')}${growth == null ? '' : ` · ${L(`${ws.length-1}개월 동안`, `${ws.length-1} mo`)} <b class="${growth >= 0 ? 'pos' : 'neg'}">${fc(growth, cur, {sign:true})}</b>`}</div>
+      <div class="tiny ink2">= ${fm(conv(h.total, cur, other), other)} · ${L('호주', 'AU')} ${fc(h.aud, 'AUD')} + ${L('한국', 'KR')} ${fc(h.krw, 'KRW')}${h.usd ? ` + ${L('달러', 'US')} ${fc(h.usd, 'USD')}` : ''}${growth == null ? '' : ` · ${L(`${ws.length-1}개월 동안`, `${ws.length-1} mo`)} <b class="${growth >= 0 ? 'pos' : 'neg'}">${fc(growth, cur, {sign:true})}</b>`}</div>
       <div class="compbar" role="img" aria-label="재산 구성">${groups.filter(g => g.v > 0).map(g => `<i style="flex:${g.v};background:${g.c}"></i>`).join('')}</div>
       <div class="tiles">${groups.map(g => `<div class="tile" style="background:${g.c}">
           <div class="tk"><span>${g.k}</span><span class="num">${h.total > 0 ? Math.round(Math.max(0, g.v) / h.total * 100) : 0}%</span></div>
@@ -1416,7 +1418,7 @@ function viewSettings(){
   return `<div class="stack">
     ${stage('settings')}<div class="pagehead"><h2>설정</h2></div>
     <section class="card c-y">${SH('star',{c:'#fff',r:16,t:16,s:48})}<h2 style="margin-bottom:10px">환율</h2>
-      <form id="fxForm" class="row"><span>1 AUD =</span><input type="number" id="fxIn" value="${S.settings.fx}" step="any" style="width:120px"><span>원</span><button class="btn primary">저장</button></form>
+      <form id="fxForm" class="row"><span>1 AUD =</span><input type="number" id="fxIn" value="${S.settings.fx}" step="any" style="width:110px"><span>원</span><span>· 1 USD =</span><input type="number" id="fxUsdIn" value="${S.settings.fxUsd || 1350}" step="any" style="width:110px"><span>원</span><button class="btn primary">저장</button></form>
       <p class="tiny muted" style="margin-top:8px">${esc(S.settings.fxDate)} 기준. 자동으로는 못 가져와서 가끔 직접 바꿔 주세요.</p></section>
     <section class="card"><h2 style="margin-bottom:6px">계좌</h2>
       <div class="list">${S.settings.accounts.map(a => `<div class="li" style="grid-template-columns:auto 1fr">${bankBadge(a)}<div class="stack" style="gap:6px">
@@ -1433,13 +1435,12 @@ function viewSettings(){
       <div class="row"><button class="btn primary" data-backup="1">백업 파일 저장</button>
         <label class="btn" for="restoreFile" style="cursor:pointer">백업 불러오기</label><input type="file" id="restoreFile" accept=".json,application/json" hidden></div>
       <div id="restoreBox"></div>
-      ${aiKey() ? `<p class="small ink2" style="margin-top:14px"><b>${L('AI 상담 연결됨', 'AI coach connected')}</b> · ${L('질문할 때 재산·수입·지출 요약(거래 내용 제외)이 Anthropic으로 보내져요.', 'Questions send a summary of your finances (no transaction details) to Anthropic.')} <button class="btn sm" data-aidisc="1">${L('연결 끊기', 'Disconnect')}</button></p>` : ''}
       ${encAvailable ? `<p class="small ink2" style="margin-top:14px"><b>사이트에서 최신 데이터 받기</b> · Claude가 새로 정리해 올린 데이터로 바꿔요.</p>${encForm('settings')}` : ''}</section>` : ''}
     <section class="card"><h2 style="margin-bottom:10px">계좌 추가</h2>
       <form id="addAcct" class="row">
         <select id="naBank" aria-label="은행">${Object.entries(BANKS).map(([k, b]) => `<option value="${k}">${b.name}</option>`).join('')}</select>
         <input type="text" id="naName" placeholder="이름 (예: 토스증권)" required style="flex:1;min-width:140px">
-        <select id="naCur" aria-label="통화"><option>AUD</option><option>KRW</option></select>
+        <select id="naCur" aria-label="통화"><option>AUD</option><option>KRW</option><option>USD</option></select>
         <select id="naType" aria-label="종류">${Object.entries(ATYPES).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select>
         <button class="btn primary">추가</button>
       </form></section>
@@ -1451,8 +1452,11 @@ const VIEWS = {home:viewHome, flow:viewFlow, subs:viewSubs, budget:viewBudget, p
 function render(){
   if (!S.settings) return;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
-  $('#demoBanner').hidden = !demo;
-  if (demo) $('#demoBanner').innerHTML = encAvailable
+  const newer = !demo && encAvailable && encSavedAt && encSavedAt > (S.settings.syncedAt || '');
+  $('#demoBanner').hidden = !demo && !newer;
+  if (newer) $('#demoBanner').innerHTML = `<div style="width:100%"><b>${L('새 데이터가 있어요.', 'New data is available.')}</b> ${L('Claude가 정리해 올린 최신 데이터예요. 받으면 이 기기 데이터가 바뀌어요.', 'Claude uploaded an update. Getting it replaces the data on this device.')}
+      ${lsGet('ntk-pass') ? `<div class="row" style="margin-top:8px"><button class="btn primary sm" data-encquick="1">${L('최신 데이터 받기', 'Get update')}</button></div><p class="tiny neg" id="encErr-quick"></p>` : encForm('banner')}</div>`;
+  else if (demo) $('#demoBanner').innerHTML = encAvailable
     ? `<div style="width:100%"><b>내 데이터가 준비돼 있어요.</b> 비밀번호를 넣으면 이 기기에 들어와요.${encForm('banner')}</div>`
     : `<span><b>예시 데이터예요.</b> 실제 숫자가 아니에요. 은행 파일을 가져오면 예시는 사라져요.</span><button class="btn sm primary" data-go="import">내 데이터 가져오기</button>`;
   const v = $('#view'); v.innerHTML = VIEWS[tab]();
@@ -1468,9 +1472,10 @@ document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const d = b.dataset;
   if (d.lang){ lang = lang === 'en' ? 'ko' : 'en'; lsSet('ntk-lang', lang); if (lang === 'ko') location.reload(); else render(); return; }
+  if (d.encquick){ b.disabled = true; loadEnc(lsGet('ntk-pass') || '').then(n => { go('home'); toast(L(`최신 데이터 ${n.toLocaleString()}건을 받았어요`, `Updated: ${n.toLocaleString()} transactions`)); })
+      .catch(() => { try { localStorage.removeItem('ntk-pass'); } catch {} render(); }); return; }
   if (d.ask){ askAI(d.ask); return; }
   if (d.chatclear){ chat.msgs = []; chat.err = ''; paintChat(); return; }
-  if (d.aidisc){ try { localStorage.removeItem('ntk-ai-key'); } catch {} render(); toast(L('AI 연결을 끊었어요', 'AI disconnected')); return; }
   if (d.tab) go(d.tab);
   else if (d.go) go(d.go);
   else if (d.set){
@@ -1566,14 +1571,14 @@ document.addEventListener('input', e => { if (e.target.id === 'fQ'){ clearTimeou
 
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
-  if (f.id === 'chatForm'){ const q = $('#chatIn').value; askAI(q); return; }
-  if (f.dataset.aikey){ const k = $('#aiKeyIn').value.trim(); if (!/^sk-ant-/.test(k)){ toast(L('sk-ant- 로 시작하는 키를 넣어 주세요', 'Enter a key starting with sk-ant-')); return; } lsSet('ntk-ai-key', k); paintChat(); toast(L('AI 상담을 연결했어요', 'AI coach connected')); return; }
+  if (f.id === 'chatForm'){ const q = $('#chatIn').value; askAI(q); setTimeout(() => { const i = $('#chatIn'); if (i) i.focus(); }, 0); return; }
+
   if (f.dataset.encform){ const id = f.dataset.encform, err = $('#encErr-' + id), btn = f.querySelector('button');
     btn.disabled = true; btn.textContent = '여는 중…'; err.textContent = '';
     loadEnc($('#encPass-' + id).value).then(n => { go('home'); toast(`내 데이터 ${n.toLocaleString()}건을 불러왔어요`); })
       .catch(x => { btn.disabled = false; btn.textContent = '불러오기'; err.textContent = x && x.message === 'nofile' ? '사이트에 데이터가 없어요.' : '비밀번호가 맞지 않아요. 다시 넣어 주세요.'; });
     return; }
-  if (f.id === 'fxForm'){ const v = parseFloat($('#fxIn').value); if (!(v > 0)){ toast('숫자로 적어 주세요'); return; } S.settings.fx = v; S.settings.fxDate = today(); persist('settings'); render(); toast('환율을 바꿨어요'); }
+  if (f.id === 'fxForm'){ const v = parseFloat($('#fxIn').value); if (!(v > 0)){ toast('숫자로 적어 주세요'); return; } S.settings.fx = v; const u = parseFloat($('#fxUsdIn').value); if (u > 0) S.settings.fxUsd = u; S.settings.fxDate = today(); persist('settings'); render(); toast('환율을 바꿨어요'); }
   else if (f.id === 'addAcct'){ if (demo) leaveDemo(); S.settings.accounts.push({id: uid(), bank: $('#naBank').value, name: $('#naName').value.trim(), cur: $('#naCur').value, type: $('#naType').value, snaps: []}); persist('settings'); render(); toast('계좌를 추가했어요'); }
   else if (f.id === 'addGoal'){ const g = {id: uid(), name: $('#ngName').value.trim(), cur: $('#ngCur').value, target: parseFloat($('#ngTarget').value) || 0, due: $('#ngDue').value || null, acct: $('#ngAcct').value || null, saved: 0};
     if (demo){ leaveDemo(); if (g.acct && !acctById(g.acct)) g.acct = null; }
@@ -1597,10 +1602,10 @@ function recategorize(acctId){
 }
 /* ================= encrypted data on the site (standalone only) ================= */
 // The site can carry the owner's data as an AES-GCM blob (key = PBKDF2 of a passphrase only the owner has).
-let encAvailable = false;
+let encAvailable = false, encSavedAt = '';
 async function probeEnc(){
   if (!STANDALONE) return;
-  try { const r = await fetch('data.enc', {cache: 'no-store'}); encAvailable = r.ok; } catch { encAvailable = false; }
+  try { const r = await fetch('data.enc', {cache: 'no-store'}); encAvailable = r.ok; if (r.ok){ const e = await r.json(); encSavedAt = e.savedAt || ''; } } catch { encAvailable = false; }
   render();
 }
 async function loadEnc(pass){
@@ -1613,6 +1618,8 @@ async function loadEnc(pass){
   const d = JSON.parse(new TextDecoder().decode(plain));
   demo = false;
   S.settings = Object.assign(defaultSettings(), d.settings); S.months = d.months || {};
+  S.settings.syncedAt = e.savedAt || new Date().toISOString();
+  lsSet('ntk-pass', pass.trim());   // this device already holds the decrypted data, so remembering the key here adds nothing new
   persist('settings'); Object.keys(S.months).forEach(persistMonth);
   return Object.values(S.months).flat().length;
 }
